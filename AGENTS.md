@@ -101,10 +101,23 @@ Ordem de resolução (código já faz isso):
 ## Regras
 
 - YAGNI / ponytail — mínimo que fecha a iteração
+- Coding style: **karpathy-guidelines** (think before coding, simplicity, surgical, goal-driven) se a skill estiver no ambiente
 - VERIFY falhou → fix no L1; 3 fails → BLOCK no HANDOFF (L2 ou humano)
 - Rate limit → L2: não recomeçar o produto
 - Personas originais/arquétipos; sem secrets no git; sem push sem autorização
 - pt-BR se o user escreveu em pt-BR
+
+## Bernstein (opcional — L1 code-heavy)
+
+- Orquestra CLI agents (Claude Code / Codex; Gemini CLI se instalado) com progresso (`bernstein live`)
+- Config: `bernstein.yaml` · piloto: `docs/BERNSTEIN-PILOT.md`
+- **Não** substitui workbench para L0 / Grok / L2 handoff humano
+- Gate preferido: `npm run build` (não pytest Python)
+- Antes de run grande: `bernstein doctor`
+
+## Tools avaliados e NÃO no core
+
+CLI-Anything (software GUI) · Langflow (flows produto) · MALLM/Multi-Agent-LLMs (debate research) · karpathy/autoresearch · karpathy/llm-council · forks karpathy-skills (já coberto por skill global)
 - **Frontend forte (UI polish, share card, motion, redesign visual):** o agente **não implementa** — gera **prompt elaborado** em `workbench/prompts-glm/` para o user colar no **GLM 5.2 MAX**. Ainda atualiza HANDOFF/QUEUE (job “prompted” ou Done quando user confirmar). Jobs leves de wire/API/content o agente implementa normal.
 
 ## DoD da iteração

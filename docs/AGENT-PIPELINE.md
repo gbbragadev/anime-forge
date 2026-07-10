@@ -54,6 +54,43 @@ Guia visual: `docs/GUIA-VISUAL.html` · shim Gemini: `GEMINI.md`
 
 ---
 
+## Bernstein (opcional — progresso L1)
+
+Orquestra **CLI coding agents** (Claude Code, Codex, Gemini CLI…) em worktrees, com TUI `bernstein live` e audit.
+
+| Use | Não use |
+|-----|---------|
+| Jobs L1 code-heavy (B1/B3/B4) | L0 copy/Grok-only |
+| Ver progresso de run paralela | Substituir HANDOFF multi-sub |
+| Gate `npm run build` | API pay-as-you-go como motor |
+
+```powershell
+cd C:\Dev\anime-forge
+bernstein doctor
+bernstein live    # monitor
+bernstein         # goal em bernstein.yaml
+```
+
+Piloto: `docs/BERNSTEIN-PILOT.md`
+
+---
+
+## Tools avaliados (mapa)
+
+| Tool | Serve para | Na factory |
+|------|------------|------------|
+| Workbench L0/L1/L2 | Handoff multi-sub | **Base** |
+| Bernstein | Progresso + multi-CLI coding | **Piloto L1** |
+| ccswarm | Claude/Codex queue/tail | Alt a Bernstein |
+| Langflow | Flows LLM de produto | Não core |
+| CLI-Anything | GIMP/Comfy agent-native | Image futuro |
+| MALLM (Multi-Agent-LLMs) | Debate multi-LLM research | Não |
+| karpathy/autoresearch | Loop treino LLM | Não |
+| karpathy/llm-council | Council via OpenRouter | P0 opcional só |
+| karpathy-guidelines skill | Qualidade de código | Já global |
+
+---
+
 ## L0 — Product Loop (negócio + fábrica)
 
 Uma volta = uma aposta de app. **Não** abra L0 novo com L0 anterior sem measure.

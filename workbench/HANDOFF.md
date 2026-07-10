@@ -25,7 +25,16 @@ grok | 2026-07-10
 ## Blockers
 - B3 aguardando execução no GLM (não é blocker técnico de key)
 
+## Bernstein pilot
+- Install **PASS** (v3.1.0 via `uv tool install bernstein`)
+- `bernstein init` + `doctor`: claude ✓ OAuth, codex ✓, gemini CLI ✗ PATH
+- `git init` feito (Bernstein precisa de git/worktrees)
+- Verdict: **Thin keep** — use para L1 code-heavy; workbench continua L0/Grok/L2
+- Doc: `docs/BERNSTEIN-PILOT.md` · config: `bernstein.yaml`
+- Full run orquestrada **não** disparada (goal pronto; user pode `bernstein` + `live`)
+
 ## Files
 `C:\Dev\anime-forge`  
 Prompt: `workbench/prompts-glm/L1-B3-ui-polish-waifu-chat.md`  
-Regra: `AGENTS.md` (Frontend forte)
+Regra: `AGENTS.md` (Frontend forte)  
+Bernstein: `docs/BERNSTEIN-PILOT.md`

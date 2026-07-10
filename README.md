@@ -85,10 +85,21 @@ npm run build
 | `OPENROUTER_MODEL` | Lê se existir | Modelo do chat |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` paga | **Não** | Coding agent |
 
+## Bernstein (opcional)
+
+Progresso + multi-CLI coding (Claude/Codex). Ver `docs/BERNSTEIN-PILOT.md`.
+
+```powershell
+bernstein doctor
+bernstein live
+bernstein   # goal em bernstein.yaml
+```
+
 ## Roadmap produto
 
 - [x] Kernel + WaifuChat skeleton
 - [x] Harness multi-agente em **loops**
+- [x] Piloto Bernstein (thin keep)
 - [ ] Billing Stripe + Pix
 - [ ] Capability image / haifu
 - [ ] CLI create-app
