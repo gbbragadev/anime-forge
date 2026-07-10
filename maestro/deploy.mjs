@@ -58,14 +58,14 @@ async function cf(pathname, opts = {}) {
 }
 
 /** Executa comando com timeout e captura stderr */
-function run(cmd, env = {}, timeout = 5 * 60 * 1000) {
+function run(cmd, env = {}, timeout = 5 * 60 * 1000, cwd = process.cwd()) {
   const finalEnv = { ...process.env, ...env };
   const shell = process.platform === "win32" ? "cmd.exe" : "bash";
   const shellArgs = process.platform === "win32" ? ["/c", cmd] : ["-c", cmd];
 
   try {
     const result = spawnSync(shell, shellArgs, {
-      cwd: process.cwd(),
+      cwd,
       env: finalEnv,
       timeout,
       encoding: "utf8",
@@ -112,7 +112,7 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   // 1. Valida output do build
   if (!fs.existsSync(outDir)) {
     log(`▶ build ${appId} (falta out/)`);
-    const buildRes = run(`npm run build -w @anime-forge/${appId}`, {}, 10 * 60 * 1000);
+    const buildRes = run(`npm run build -w @anime-forge/${appId}`, {}, 10 * 60 * 1000, root);
     if (!buildRes.ok) {
       return {
         ok: false,
@@ -174,9 +174,9 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   log(`✓ deployed to Pages`);
   const defaultUrl = `https://${appId}.pages.dev`;
 
-  // 3. Setup custom domain (se subdomain ≠ appId)
+  // 3. Custom domain SEMPRE — o objetivo é <subdomain>.gbbragadev.com
   const customDomain = `${deploy.subdomain}.gbbragadev.com`;
-  if (deploy.subdomain !== appId) {
+  {
     log(`▶ custom domain ${customDomain}`);
 
     // Descobre account ID
