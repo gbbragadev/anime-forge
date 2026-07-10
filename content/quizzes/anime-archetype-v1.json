@@ -1,0 +1,87 @@
+{
+  "id": "anime-archetype-v1",
+  "title": "Qual arquétipo anime é o seu?",
+  "locale": "pt-BR",
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Sábado à noite ideal?",
+      "options": [
+        { "id": "a", "label": "Filme calmo + cobertor", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Competir em algo (jogo, esporte, ranking)", "weights": { "rival": 2, "gamer": 1 } },
+        { "id": "c", "label": "Explorar a cidade sozinho de fone", "weights": { "cyber": 2, "gamer": 1 } },
+        { "id": "d", "label": "Rolê com muita gente e foto", "weights": { "idol": 2, "soft": 1 } }
+      ]
+    },
+    {
+      "id": "q2",
+      "text": "No grupo, você é o que?",
+      "options": [
+        { "id": "a", "label": "Quem consolinha e organiza o clima", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Quem puxa desafio e zoa o ranking", "weights": { "rival": 2, "idol": 1 } },
+        { "id": "c", "label": "Quem observa e solta a frase certeira", "weights": { "cyber": 2, "sage": 1 } },
+        { "id": "d", "label": "Quem vira o centro da conversa", "weights": { "idol": 2, "rival": 1 } }
+      ]
+    },
+    {
+      "id": "q3",
+      "text": "Conflito com alguém próximo:",
+      "options": [
+        { "id": "a", "label": "Conversa baixo e tenta entender", "weights": { "soft": 2, "sage": 2 } },
+        { "id": "b", "label": "Enfrenta de frente, sem enrolação", "weights": { "rival": 2, "cyber": 1 } },
+        { "id": "c", "label": "Some um pouco e volta com a solução", "weights": { "cyber": 2, "gamer": 1 } },
+        { "id": "d", "label": "Desarme com humor e carinho", "weights": { "idol": 2, "soft": 1 } }
+      ]
+    },
+    {
+      "id": "q4",
+      "text": "Seu “power-up” é…",
+      "options": [
+        { "id": "a", "label": "Empatia e paciência", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Orgulho + treino duro", "weights": { "rival": 2 } },
+        { "id": "c", "label": "Estratégia e timing", "weights": { "cyber": 2, "gamer": 1 } },
+        { "id": "d", "label": "Carisma e presença", "weights": { "idol": 2 } }
+      ]
+    },
+    {
+      "id": "q5",
+      "text": "Playlist mental padrão:",
+      "options": [
+        { "id": "a", "label": "OST suave / lo-fi", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Abertura de shonen no talo", "weights": { "rival": 2, "idol": 1 } },
+        { "id": "c", "label": "Synthwave / electronic dark", "weights": { "cyber": 2, "gamer": 1 } },
+        { "id": "d", "label": "Idol / pop animado", "weights": { "idol": 2, "soft": 1 } }
+      ]
+    },
+    {
+      "id": "q6",
+      "text": "Como você toma decisão difícil?",
+      "options": [
+        { "id": "a", "label": "Pesa o impacto nas pessoas", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Escolhe o caminho que prova seu valor", "weights": { "rival": 2 } },
+        { "id": "c", "label": "Calcula risco e sai silencioso", "weights": { "cyber": 2, "sage": 1 } },
+        { "id": "d", "label": "Pergunta pro chat / party e decide em grupo", "weights": { "gamer": 2, "idol": 1 } }
+      ]
+    },
+    {
+      "id": "q7",
+      "text": "Frase que mais parece com você:",
+      "options": [
+        { "id": "a", "label": "“Respira. A gente resolve.”", "weights": { "sage": 2, "soft": 1 } },
+        { "id": "b", "label": "“Hmph. Não pense que eu me importo.”", "weights": { "rival": 2 } },
+        { "id": "c", "label": "“…Interessante.”", "weights": { "cyber": 2 } },
+        { "id": "d", "label": "“Bora! Eu puxo o mood.”", "weights": { "idol": 2, "gamer": 1 } }
+      ]
+    },
+    {
+      "id": "q8",
+      "text": "No final do dia, o que te recarrega?",
+      "options": [
+        { "id": "a", "label": "Conversa profunda com 1 pessoa", "weights": { "soft": 2, "sage": 1 } },
+        { "id": "b", "label": "Superar um recorde / meta", "weights": { "rival": 2, "gamer": 1 } },
+        { "id": "c", "label": "Silêncio + tela fraca / cidade de madrugada", "weights": { "cyber": 2, "gamer": 1 } },
+        { "id": "d", "label": "Atenção, risada, feed engajado", "weights": { "idol": 2 } }
+      ]
+    }
+  ]
+}

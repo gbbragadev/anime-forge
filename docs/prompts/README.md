@@ -4,6 +4,7 @@ Cole o bloco de código do arquivo no Codex / Claude / Grok / Gemini.
 
 | Arquivo | Loop | Job |
 |---------|------|-----|
+| **`NOVO-APP.md`** | L1 | **B1 scaffold em 1 prompt** (começar app novo) |
 | `L0-P0-scorecard.md` | L0 | P0 |
 | `L0-P1-content-hooks.md` | L0 | P1 |
 | `L0-P4-measure-kill.md` | L0 | P4–P5 |

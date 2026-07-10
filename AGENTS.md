@@ -63,6 +63,8 @@ workbench/                estado das iterações
 3. Personas em `content/personas/`
 4. Theme mínimo — não redesenhar o design system
 
+**Começar app novo com 1 prompt:** `docs/prompts/NOVO-APP.md` (também no guia visual §★).
+
 Capability pronta: `chat`. Image/haifu = só com job explícito.
 
 ## Comandos
@@ -74,16 +76,20 @@ npm run dev      # :3000
 npm run build    # VERIFY obrigatório após código
 ```
 
-Env do **produto** (chat do app — não é coding agent):
+Env do **produto** (cérebro do app — não é coding agent):
 
-Ordem de resolução (código já faz isso):
-1. `OPEN_ROUTER_API_KEY` — **env do Windows/sistema** (padrão; agent **pega direto**, não pede)
-2. `OPENROUTER_API_KEY` — `.env.local` se existir
+**Provider default: Z.AI / GLM** (`PRODUCT_AI_PROVIDER=zai`)
 
-- Smoke: `GET /api/health` ou confiar no `process.env` / shell
-- **Não perguntar** a key ao user no chat se a env do sistema existir
-- Se faltar: anotar no HANDOFF que o user precisa setar `OPEN_ROUTER_API_KEY` no Windows — não insistir pedindo o valor da key
-- Nunca commitar keys; nunca usar Anthropic/OpenAI para o agent
+| Var | Uso |
+|-----|-----|
+| `ZAI_API_KEY` (ou `GLM_API_KEY`) | Key Z.AI — `.env.local` ou env sistema; **não pedir no chat** |
+| `ZAI_MODEL` | default `glm-4.5-flash` (free); qualidade `glm-5.2` |
+| `OPEN_ROUTER_API_KEY` | só se `PRODUCT_AI_PROVIDER=openrouter` |
+
+- Base URL Z.AI: `https://api.z.ai/api/paas/v4/` (OpenAI-compatible)
+- Docs: https://docs.z.ai/guides/overview/quick-start
+- Smoke: `GET /api/health`
+- Nunca commitar keys; nunca usar keys de coding agent (Anthropic/OpenAI sub)
 
 ## Jobs ↔ loops
 
@@ -119,6 +125,7 @@ Ordem de resolução (código já faz isso):
 
 CLI-Anything (software GUI) · Langflow (flows produto) · MALLM/Multi-Agent-LLMs (debate research) · karpathy/autoresearch · karpathy/llm-council · forks karpathy-skills (já coberto por skill global)
 - **Frontend forte (UI polish, share card, motion, redesign visual):** o agente **não implementa** — gera **prompt elaborado** em `workbench/prompts-glm/` para o user colar no **GLM 5.2 MAX**. Ainda atualiza HANDOFF/QUEUE (job “prompted” ou Done quando user confirmar). Jobs leves de wire/API/content o agente implementa normal.
+- **Prompts GLM = brief de design, não one-liner** (lição 2026-07-10, anime-quiz B3: ~4/10 → ~7.5/10 com prompt denso). Hoje o apelo visual é o produto. GLM constrói bem **se** o prompt tiver: (1) diagnóstico do que está “texto puro”, (2) metas visuais concretas por tela, (3) arquivos-alvo, (4) anti-padrões / sem IP, (5) VERIFY + DoD user-facing. Ver checklist em `workbench/prompts-glm/README.md`.
 
 ## DoD da iteração
 

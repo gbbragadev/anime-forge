@@ -4,7 +4,7 @@ Uma linha = uma **iteração** de loop. Limpar ao terminar.
 
 | slot | agent | loop | job | app / area | since | notes |
 |------|-------|------|-----|------------|-------|-------|
-| A | glm | L1 | B3 | waifu-chat | 01:14 | UI polish (share card + empty states + mobile). GLM 5.2 MAX executando o prompt de `prompts-glm/` |
+| — | — | — | — | — | — | livre |
 
 ## Protocolo
 

@@ -2,17 +2,15 @@
 
 Factory de webapps nichados com IA (**Tema + IA + Frontend**).
 
-Vertical: **anime**. App: **WaifuChat**.
+Vertical: **anime**. Apps: **WaifuChat** (chat) · **AnimeQuiz** (quiz de arquétipo).
 
-## Guia visual (como usar)
+## Guia visual (como usar corretamente)
 
-- **Browser (recomendado):** abra [`docs/GUIA-VISUAL.html`](docs/GUIA-VISUAL.html)
+- **Browser (recomendado):** [`docs/GUIA-VISUAL.html`](docs/GUIA-VISUAL.html)
 - **Markdown:** [`docs/GUIA-VISUAL.md`](docs/GUIA-VISUAL.md)
+- **Novo app com 1 prompt:** [`docs/prompts/NOVO-APP.md`](docs/prompts/NOVO-APP.md)
 
-**Política:** agentes só com **sua subscription** (Claude Code / Codex / Grok / **Gemini**).  
-**Não** use API paga como motor do coding agent (`GEMINI_API_KEY` pay-as-you-go incluído).  
-**Produto:** app e agent leem `OPEN_ROUTER_API_KEY` **direto da env do sistema** (não pedem no chat).  
-Fallback: `OPENROUTER_API_KEY` no `.env.local` se existir.
+**Política:** agents = subscription · OpenRouter = env sistema (produto) · 1 sessão = 1 job · workbench = verdade multi-sub.
 
 ## Loops (multi-agente)
 
@@ -46,13 +44,16 @@ Troca de limite → cole `docs/prompts/L2-handoff.md`.
 ## Estrutura de código
 
 ```
-apps/waifu-chat     → produto
-packages/ai         → OpenRouter streaming
-packages/config     → defineApp (Zod)
+apps/waifu-chat     → chat IA (OpenRouter / Z.AI)
+apps/anime-quiz     → quiz arquétipo (estático, sem key no free path)
+packages/ai         → streaming produto
+packages/config     → defineApp (Zod) + capability quiz
 packages/credits    → free/day + coins + weekly
 packages/ui         → design system anime
-content/personas    → packs reutilizáveis
+content/personas    → packs + quiz-archetypes
+content/quizzes     → bancos de perguntas
 docs/PLAYBOOK.md    → L0 negócio
+workbench/          → QUEUE · HANDOFF · prompts-glm
 ```
 
 ## Quick start
@@ -61,12 +62,13 @@ docs/PLAYBOOK.md    → L0 negócio
 cd C:\Dev\anime-forge
 npm install
 
-# Smoke: se OPEN_ROUTER_API_KEY já existir no Windows, não precisa .env.local
-# Senão: copy .env.example apps\waifu-chat\.env.local e preencha a key
+# WaifuChat (IA — precisa key no Windows ou .env.local)
+npm run dev          # http://localhost:3000
+# GET /api/health
 
-npm run dev    # http://localhost:3000
-# checar key: http://localhost:3000/api/health
-npm run build
+# AnimeQuiz (estático — sem key)
+npm run dev:quiz     # http://localhost:3000 (só um app por porta)
+npm run build:quiz
 ```
 
 ## Novo app (L1/B1)
@@ -80,19 +82,30 @@ npm run build
 
 | Key | Agent faz o quê? | Para quê |
 |-----|------------------|----------|
-| `OPEN_ROUTER_API_KEY` | **Lê da env do sistema — não pede** | App — padrão smoke |
-| `OPENROUTER_API_KEY` | Lê se existir — não pede | App — fallback `.env.local` |
-| `OPENROUTER_MODEL` | Lê se existir | Modelo do chat |
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` paga | **Não** | Coding agent |
+| `ZAI_API_KEY` | Lê env / `.env.local` — **não pede** | Cérebro do app (Z.AI/GLM) — **default** |
+| `ZAI_MODEL` | default `glm-4.5-flash` (free) | ou `glm-5.2` qualidade |
+| `OPEN_ROUTER_API_KEY` | só se provider=openrouter | Fallback OpenRouter |
+| `ANTHROPIC` / `OPENAI` / `GEMINI` pay-as-you-go | **Não** | Coding agent |
 
-## Bernstein (opcional)
+Docs Z.AI: https://docs.z.ai/guides/overview/quick-start
 
-Progresso + multi-CLI coding (Claude/Codex). Ver `docs/BERNSTEIN-PILOT.md`.
+## Bernstein + Maestro HQ (opcional, visual)
+
+Bernstein = orquestrador de CLIs. **Maestro** = cara + roster de modelos + HQ sem digitar.
+
+| | |
+|--|--|
+| **HQ visual** | [`maestro/index.html`](maestro/index.html) |
+| **1 clique** | [`scripts/start-maestro.ps1`](scripts/start-maestro.ps1) |
+| **Modelos fixos** | [`maestro/roster.json`](maestro/roster.json) |
+| Docs | [`docs/MAESTRO.md`](docs/MAESTRO.md) · [`docs/BERNSTEIN-EXPLICADO.md`](docs/BERNSTEIN-EXPLICADO.md) |
 
 ```powershell
-bernstein doctor
-bernstein live
-bernstein   # goal em bernstein.yaml
+# Preferido (abre cara + GUI de execução)
+.\scripts\start-maestro.ps1
+
+# Manual
+bernstein gui serve   # http://127.0.0.1:8052/ui/
 ```
 
 ## Roadmap produto

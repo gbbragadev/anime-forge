@@ -4,6 +4,8 @@
 **Versão:** bernstein 3.1.0  
 **Repo:** `C:\Dev\anime-forge`
 
+> **O que é o Bernstein?** leia [`BERNSTEIN-EXPLICADO.md`](./BERNSTEIN-EXPLICADO.md) (analogia + pipeline + quando usar).
+
 ## Objetivo do piloto
 
 Ver se o Bernstein serve para **acompanhar / executar** jobs L1 com CLI coding agents (Claude Code, Codex, Gemini CLI), em paralelo ao workbench multi-sub.

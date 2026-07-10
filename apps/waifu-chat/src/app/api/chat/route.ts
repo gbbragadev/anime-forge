@@ -1,7 +1,8 @@
 import {
-  getOpenRouterApiKey,
-  openRouterKeyHint,
-  streamOpenRouterChat,
+  getProductAiProvider,
+  getProductApiKey,
+  productKeyHint,
+  streamProductChat,
   type ChatMessage,
 } from "@anime-forge/ai";
 import { cookies } from "next/headers";
@@ -23,10 +24,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-  // Smoke padrão: OPEN_ROUTER_API_KEY (Windows) → OPENROUTER_API_KEY (.env.local)
-  const apiKey = getOpenRouterApiKey();
+  const provider =
+    (appConfig.ai.provider as "zai" | "openrouter") || getProductAiProvider();
+  const apiKey = getProductApiKey(process.env, provider);
   if (!apiKey) {
-    return Response.json({ error: openRouterKeyHint() }, { status: 500 });
+    return Response.json({ error: productKeyHint(provider) }, { status: 500 });
   }
 
   let body: Body;
@@ -64,7 +66,8 @@ export async function POST(req: Request) {
   });
 
   try {
-    const result = streamOpenRouterChat({
+    const result = streamProductChat({
+      provider,
       apiKey,
       model: appConfig.ai.model,
       system: persona.system,
@@ -81,6 +84,8 @@ export async function POST(req: Request) {
         "X-Credits-Remaining": String(
           Math.max(0, nextState.freePerDay - nextState.used)
         ),
+        "X-AI-Provider": provider,
+        "X-AI-Model": appConfig.ai.model,
       },
     });
   } catch (err) {

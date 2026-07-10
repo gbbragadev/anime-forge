@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const aiConfigSchema = z.object({
-  provider: z.literal("openrouter"),
+  /** Product LLM: zai (GLM) default | openrouter fallback */
+  provider: z.enum(["zai", "openrouter"]).default("zai"),
   model: z.string().min(1),
   maxHistory: z.number().int().min(1).max(50).default(12),
   maxTokens: z.number().int().min(50).max(4000).default(400),
@@ -29,7 +30,9 @@ export const appConfigSchema = z.object({
   name: z.string().min(1),
   niche: z.string().default("anime"),
   locale: z.string().default("pt-BR"),
-  capabilities: z.array(z.enum(["chat", "image", "face-swap", "gallery"])).min(1),
+  capabilities: z
+    .array(z.enum(["chat", "image", "face-swap", "gallery", "quiz"]))
+    .min(1),
   ai: aiConfigSchema,
   monetization: monetizationSchema,
   legal: z.object({

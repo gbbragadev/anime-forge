@@ -11,12 +11,14 @@ export const appConfig = defineApp({
   locale: "pt-BR",
   capabilities: ["chat"],
   ai: {
-    provider: "openrouter",
-    // modelo barato/rápido — troque via env se quiser
+    // Z.AI / GLM — https://docs.z.ai/guides/overview/quick-start
+    // default free flash (chat viral); quality: ZAI_MODEL=glm-5.2
+    provider: "zai",
     model:
+      process.env.ZAI_MODEL?.trim() ||
+      process.env.GLM_MODEL?.trim() ||
       process.env.OPENROUTER_MODEL?.trim() ||
-      process.env.OPEN_ROUTER_MODEL?.trim() ||
-      "deepseek/deepseek-v4-flash",
+      "glm-4.5-flash",
     maxHistory: 12,
     maxTokens: 400,
     temperature: 0.85,

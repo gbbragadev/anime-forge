@@ -1,0 +1,113 @@
+{
+  "version": "1.0",
+  "maestro": {
+    "id": "maestro",
+    "name": "Maestro",
+    "title": "Maestro da Anime Forge",
+    "tagline": "Eu conduzo o ensaio. Você decide a obra.",
+    "voice": "pt-BR, calmo, teatral, sem enrolação",
+    "avatar": "🎼",
+    "color": "#c44dff",
+    "role": "Orquestra coding agents. Não escreve código sozinho — despacha músicos (CLIs) com partitura fixa."
+  },
+  "policy": {
+    "coding": "subscription_cli_only",
+    "product_llm": "zai_glm",
+    "never": [
+      "API paga de coding como motor do agent",
+      "Pedir API key no chat",
+      "Auto-dispatch sem roster"
+    ]
+  },
+  "players": [
+    {
+      "id": "claude-frontend",
+      "face": "🎨",
+      "name": "Claude Front",
+      "cli": "claude",
+      "adapter": "claude",
+      "model": "sonnet",
+      "effort": "high",
+      "jobs": ["B3", "L1-ui", "review-ui"],
+      "roles": ["frontend", "reviewer"],
+      "color": "#f59e0b",
+      "blurb": "UI polish, componentes, acessibilidade visual."
+    },
+    {
+      "id": "codex-backend",
+      "face": "⚙️",
+      "name": "Codex Engine",
+      "cli": "codex",
+      "adapter": "codex",
+      "model": "default",
+      "effort": "high",
+      "jobs": ["B1", "B4", "B5", "L1-api", "scaffold"],
+      "roles": ["backend", "devops"],
+      "color": "#38bdf8",
+      "blurb": "Scaffold, API, credits, build gates."
+    },
+    {
+      "id": "claude-qa",
+      "face": "🔎",
+      "name": "Claude QA",
+      "cli": "claude",
+      "adapter": "claude",
+      "model": "sonnet",
+      "effort": "medium",
+      "jobs": ["B5", "review", "ship-check"],
+      "roles": ["qa", "reviewer"],
+      "color": "#34d399",
+      "blurb": "Review, ship check, não expandir escopo."
+    },
+    {
+      "id": "gemini-copy",
+      "face": "✨",
+      "name": "Gemini Spark",
+      "cli": "gemini",
+      "adapter": "gemini",
+      "model": "default",
+      "effort": "medium",
+      "jobs": ["B2", "P0", "P1", "personas", "hooks"],
+      "roles": ["prompt-engineer", "analyst"],
+      "color": "#a78bfa",
+      "blurb": "Personas, hooks, scorecard. (CLI no PATH se instalada.)",
+      "optional": true
+    }
+  ],
+  "dispatch_map": {
+    "L0/P0": "gemini-copy",
+    "L0/P1": "gemini-copy",
+    "L1/B1": "codex-backend",
+    "L1/B2": "gemini-copy",
+    "L1/B3": "claude-frontend",
+    "L1/B4": "codex-backend",
+    "L1/B5": "claude-qa",
+    "default": "codex-backend"
+  },
+  "presets": [
+    {
+      "id": "scaffold-app",
+      "label": "Scaffold app novo",
+      "emoji": "🧱",
+      "goal": "Siga docs/prompts/NOVO-APP.md. Crie um app de demonstração id=demo-spark name=DemoSpark one-liner='Chat anime demo da factory'. capability=chat. 4 personas OCs. NÃO mude waifu-chat além de copiar. npm run build deve passar. Atualize workbench/HANDOFF.md."
+    },
+    {
+      "id": "ship-check",
+      "label": "Ship check WaifuChat",
+      "emoji": "✅",
+      "goal": "Rode ship check do WaifuChat: npm run build, confira GET /api/health (provider zai), free quota e disclaimer. Documente PASS/FAIL em workbench/HANDOFF.md. Não refatore UI."
+    },
+    {
+      "id": "personas-pack",
+      "label": "Pack personas +4",
+      "emoji": "🎭",
+      "goal": "Adicione 4 personas ORIGINAIS em content/personas/ (PT-BR system+starter+tags+color). Wire no app.config do waifu-chat se necessário. npm run build. Não mexer em packages/ai."
+    },
+    {
+      "id": "api-smoke",
+      "label": "API + health Z.AI",
+      "emoji": "⚡",
+      "goal": "Verifique packages/ai product provider zai + glm-4.5-flash, /api/health e chat route. Corrija só se quebrado. npm run build. Não commitar secrets."
+    }
+  ]
+}
