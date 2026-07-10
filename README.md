@@ -4,6 +4,11 @@ Factory de webapps nichados com IA (**Tema + IA + Frontend**).
 
 Vertical: **anime**. Apps: **WaifuChat** (chat) · **AnimeQuiz** (quiz de arquétipo).
 
+## Handoff (ideia + o que foi feito)
+
+- **[`docs/HANDOFF-SESSAO.md`](docs/HANDOFF-SESSAO.md)** — estado canônico para retomar em qualquer agent  
+- Workbench: [`workbench/HANDOFF.md`](workbench/HANDOFF.md)
+
 ## Guia visual (como usar corretamente)
 
 - **Browser (recomendado):** [`docs/GUIA-VISUAL.html`](docs/GUIA-VISUAL.html)

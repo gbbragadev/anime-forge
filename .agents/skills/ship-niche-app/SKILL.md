@@ -15,6 +15,7 @@ description: >
 - Rate limit: retomar via L2
 - “segue”, “próximo job”, “fecha o loop”, “ship waifu-chat / anime-quiz”
 - “pode decidir e seguir” / “siga até decisão minha” (ver gates)
+- “outra ideia” / “próximo app” / “setar ideia nova” → `docs/prompts/L0-NOVA-IDEIA.md`
 
 ## Não usar
 
@@ -37,6 +38,7 @@ description: >
 
 | Sinal | Loop / job |
 |-------|------------|
+| User: outra ideia / próximo app / app anterior Done | L0 swap → `L0-NOVA-IDEIA` / P0 |
 | HANDOFF pede scorecard / ideia nova | L0/P0 |
 | Falta content hooks | L0/P1 |
 | P0 GO + P1 ok + user “pode decidir” | L1/B1 permitido |

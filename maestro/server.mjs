@@ -1,0 +1,700 @@
+/**
+ * Maestro HQ server — Run real (sem digitar bernstein na mão)
+ *
+ *   node maestro/server.mjs
+ *   http://127.0.0.1:8787
+ *
+ * POST /api/run  { goal, executor?, playerId?, maxTurns? }
+ * GET  /api/status
+ * GET  /api/events   (SSE log stream)
+ * GET  /api/roster
+ */
+
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawn } from "node:child_process";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, "..");
+const PORT = Number(process.env.MAESTRO_PORT || 8787);
+const ROSTER_PATH = path.join(__dirname, "roster.json");
+
+/** @type {{ status: string, executor: string|null, goal: string|null, startedAt: string|null, endedAt: string|null, exitCode: number|null, logs: string[], pid: number|null }} */
+const state = {
+  status: "idle", // idle | running | done | error
+  executor: null,
+  goal: null,
+  startedAt: null,
+  endedAt: null,
+  exitCode: null,
+  logs: [],
+  pid: null,
+};
+
+/** @type {Set<import('node:http').ServerResponse>} */
+const sseClients = new Set();
+/** @type {import('node:child_process').ChildProcess | null} */
+let child = null;
+
+/** Strip ANSI / OSC / TUI control codes */
+function stripAnsi(input) {
+  let s = String(input);
+  s = s.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "");
+  s = s.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "");
+  s = s.replace(/\x1b[@-Z\\-_]/g, "");
+  s = s.replace(/\x1b./g, "");
+  // only strip CSI-like leftovers that look like escape params, not "[08:27:15]"
+  s = s.replace(/(?<![\w\d])\[[\?\d;]{1,40}[A-Za-z](?![\w])/g, "");
+  s = s.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "");
+  return s;
+}
+
+/** True = don't show in HQ log */
+function isNoiseLine(line) {
+  const t = line.trim();
+  if (!t) return true;
+
+  // progress counters from TUI redraw: "1", "90", "*2", "i.7"
+  if (/^[\d*]+$/.test(t)) return true;
+  if (/^[*\s]*\d{1,4}$/.test(t)) return true;
+  if (/^[a-z]\.\d+$/i.test(t)) return true;
+  if (/^[\d.]+\s*%?$/.test(t)) return true;
+
+  // spinner / box drawing only
+  if (/^[\s│┃─┌┐└┘╭╮╰╯█░▒▓●○◦·▌▐▀▄]+$/u.test(t)) return true;
+
+  // very short fragments (TUI crumbs)
+  if (t.length <= 2 && !/^[✓✗▶■$]/.test(t)) return true;
+
+  // mostly non-text after strip
+  const letters = (t.match(/[A-Za-z\u00C0-\u024F]/g) || []).length;
+  if (t.length >= 6 && letters / t.length < 0.2) return true;
+
+  return false;
+}
+
+/**
+ * Buffer bytes → only emit complete lines ending in \n.
+ * \r alone = TUI overwrite of current line (keep buffer, don't emit crumbs).
+ */
+function createStreamSanitizer(prefix = "") {
+  let buf = "";
+  let lastEmitted = "";
+  let lastProgressAt = 0;
+
+  return {
+    push(chunk) {
+      let s = stripAnsi(String(chunk));
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if (ch === "\r") {
+          // TUI redraw: discard current incomplete line (status spinner)
+          buf = "";
+          continue;
+        }
+        if (ch === "\n") {
+          const line = buf.replace(/\s+$/, "");
+          buf = "";
+          if (isNoiseLine(line)) continue;
+          // dedupe identical consecutive lines (spinners)
+          if (line === lastEmitted) continue;
+          lastEmitted = line;
+          log(prefix + line);
+          continue;
+        }
+        buf += ch;
+        // hard cap buffer (don't grow forever on binary noise)
+        if (buf.length > 8000) buf = buf.slice(-2000);
+      }
+      // Optional: throttle status line without newline (e.g. "Running… 45%")
+      const soft = buf.trim();
+      if (
+        soft.length >= 12 &&
+        /[A-Za-z]/.test(soft) &&
+        !isNoiseLine(soft) &&
+        soft !== lastEmitted &&
+        Date.now() - lastProgressAt > 2500
+      ) {
+        // only if it looks like a real status sentence
+        if (/\b(run|build|error|pass|fail|writing|created|done|npm|✓|✗|▶)\b/i.test(soft)) {
+          lastProgressAt = Date.now();
+          lastEmitted = soft;
+          log(prefix + soft + " …");
+          // don't clear buf — still waiting for \n
+        }
+      }
+    },
+    flush() {
+      const line = buf.replace(/\s+$/, "");
+      buf = "";
+      if (!isNoiseLine(line) && line !== lastEmitted) {
+        log(prefix + line);
+      }
+    },
+  };
+}
+
+function log(line) {
+  let msg = stripAnsi(typeof line === "string" ? line : String(line)).trimEnd();
+  // strip accidental "stderr: " prefix noise labels we no longer want for clean TUI
+  if (msg.startsWith("stderr: ")) {
+    const rest = msg.slice(8);
+    if (isNoiseLine(rest)) return;
+    // only keep stderr if it looks like a real error/message
+    if (!/(error|fail|denied|unexpected|ENOENT|cannot|invalid|✗)/i.test(rest) && rest.length < 20) {
+      return;
+    }
+    msg = rest;
+  }
+  if (
+    isNoiseLine(msg) &&
+    !/^\[?\d{2}:\d{2}/.test(msg) &&
+    !msg.startsWith("▶") &&
+    !msg.startsWith("✓") &&
+    !msg.startsWith("✗") &&
+    !msg.startsWith("■") &&
+    !msg.startsWith("$")
+  ) {
+    return;
+  }
+  const stamp = new Date().toISOString().slice(11, 19);
+  const entry = `[${stamp}] ${msg}`;
+  state.logs.push(entry);
+  if (state.logs.length > 2000) state.logs.shift();
+  const data = `data: ${JSON.stringify({ type: "log", line: entry })}\n\n`;
+  for (const res of sseClients) {
+    try {
+      res.write(data);
+    } catch {
+      sseClients.delete(res);
+    }
+  }
+  console.log(entry);
+}
+
+function broadcastStatus() {
+  const payload = {
+    type: "status",
+    status: state.status,
+    executor: state.executor,
+    goal: state.goal,
+    startedAt: state.startedAt,
+    endedAt: state.endedAt,
+    exitCode: state.exitCode,
+    pid: state.pid,
+  };
+  const data = `data: ${JSON.stringify(payload)}\n\n`;
+  for (const res of sseClients) {
+    try {
+      res.write(data);
+    } catch {
+      sseClients.delete(res);
+    }
+  }
+}
+
+function readRoster() {
+  return JSON.parse(fs.readFileSync(ROSTER_PATH, "utf8"));
+}
+
+function resolveBin(name) {
+  const isWin = process.platform === "win32";
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  const candidates = [
+    name,
+    isWin ? `${name}.exe` : name,
+    path.join(home, ".grok", "bin", isWin ? "grok.exe" : "grok"),
+    path.join(home, ".local", "bin", name),
+  ];
+  // which via PATH — spawn will resolve; prefer known grok path
+  if (name === "grok" || name === "grok.exe") {
+    const p = path.join(home, ".grok", "bin", isWin ? "grok.exe" : "grok");
+    if (fs.existsSync(p)) return p;
+  }
+  return name;
+}
+
+/**
+ * @param {string} goal
+ * @param {{ executor?: string, playerId?: string, maxTurns?: number }} opts
+ */
+function startRun(goal, opts = {}) {
+  if (state.status === "running") {
+    return { ok: false, error: "Já existe uma run em andamento. Aguarde ou POST /api/stop." };
+  }
+  if (!goal || !String(goal).trim()) {
+    return { ok: false, error: "goal vazio" };
+  }
+
+  const roster = readRoster();
+  let executor = (opts.executor || "grok").toLowerCase();
+  let player = null;
+
+  if (opts.playerId) {
+    player = roster.players.find((p) => p.id === opts.playerId) || null;
+    if (player) executor = (player.cli || executor).toLowerCase();
+  }
+
+  // normalize
+  if (executor === "grok-solo" || executor === "xai") executor = "grok";
+  if (executor === "claude-code") executor = "claude";
+
+  const maxTurns = opts.maxTurns || 30;
+  const fullGoal =
+    goal.trim() +
+    "\n\n---\nMaestro HQ constraints:\n" +
+    "- Repo: " +
+    ROOT +
+    "\n- Surgical / YAGNI. Gate: npm run build if code changes.\n" +
+    "- Do not commit secrets. Product AI = Z.AI (ZAI_API_KEY), not coding brain.\n" +
+    "- Update workbench/HANDOFF.md when done.\n";
+
+  state.status = "running";
+  state.executor = executor;
+  state.goal = fullGoal;
+  state.startedAt = new Date().toISOString();
+  state.endedAt = null;
+  state.exitCode = null;
+  state.logs = [];
+  state.pid = null;
+  broadcastStatus();
+
+  // Goal em arquivo — evita quebra de args no Windows/shell
+  const goalFile = path.join(__dirname, ".run-goal.txt");
+  try {
+    fs.writeFileSync(goalFile, fullGoal, "utf8");
+  } catch (e) {
+    state.status = "error";
+    state.exitCode = 1;
+    state.endedAt = new Date().toISOString();
+    log(`✗ não escreveu goal file: ${e}`);
+    broadcastStatus();
+    return { ok: false, error: String(e) };
+  }
+
+  /** @type {string} */
+  let cmd;
+  /** @type {string[]} */
+  let args;
+  /** @type {boolean} */
+  let useShell = false;
+
+  if (executor === "bernstein") {
+    cmd = "bernstein";
+    // bernstein -g from file content read by us
+    args = ["-g", fullGoal.replace(/\r?\n/g, " · ")];
+    useShell = false;
+  } else if (executor === "codex") {
+    cmd = "codex";
+    args = ["exec", "--full-auto", fullGoal.replace(/\r?\n/g, " ")];
+    useShell = false;
+  } else if (executor === "claude") {
+    cmd = "claude";
+    args = [
+      "-p",
+      fullGoal.replace(/\r?\n/g, "\n"),
+      "--permission-mode",
+      "bypassPermissions",
+      "--max-turns",
+      String(maxTurns),
+    ];
+    useShell = false;
+  } else if (executor === "gemini") {
+    cmd = "gemini";
+    args = ["-p", fullGoal.replace(/\r?\n/g, " "), "-y"];
+    useShell = false;
+  } else {
+    // Grok: TUI polui stdout/stderr — HQ NÃO mostra raw; só status + file watch.
+    // --output-format json no fim; raw vai para maestro/runs/*.raw.log
+    cmd = resolveBin("grok");
+    args = [
+      "--cwd",
+      ROOT,
+      "--always-approve",
+      "--permission-mode",
+      "bypassPermissions",
+      "--max-turns",
+      String(maxTurns),
+      "--output-format",
+      "json",
+      "--no-alt-screen",
+      "--check",
+      fullGoal,
+    ];
+    useShell = false;
+  }
+
+  const runsDir = path.join(__dirname, "runs");
+  fs.mkdirSync(runsDir, { recursive: true });
+  const runId = new Date().toISOString().replace(/[:.]/g, "-");
+  const rawLogPath = path.join(runsDir, `${runId}-${executor}.raw.log`);
+  const rawFd = fs.openSync(rawLogPath, "w");
+
+  log(`▶ Run start · executor=${executor} · player=${player?.id || "—"}`);
+  log(`  raw log → maestro/runs/${path.basename(rawLogPath)}`);
+  log(`$ ${cmd} … [goal]`);
+
+  const quietUi = executor === "grok"; // Grok TUI is unreadable in web panel
+
+  try {
+    child = spawn(cmd, args, {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        FORCE_COLOR: "0",
+        NO_COLOR: "1",
+        TERM: "dumb",
+        CI: "1",
+        GROK_NO_TUI: "1",
+      },
+      shell: useShell,
+      windowsHide: true,
+    });
+  } catch (err) {
+    try {
+      fs.closeSync(rawFd);
+    } catch {
+      /* ignore */
+    }
+    state.status = "error";
+    state.exitCode = 1;
+    state.endedAt = new Date().toISOString();
+    log(`✗ spawn failed: ${err instanceof Error ? err.message : err}`);
+    broadcastStatus();
+    return { ok: false, error: String(err) };
+  }
+
+  state.pid = child.pid ?? null;
+  broadcastStatus();
+
+  if (quietUi) {
+    log("⏳ Grok trabalhando… (log limpo: só marcos + arquivos alterados)");
+    log("   Dica: raw TUI completo está no .raw.log se precisar debugar");
+  }
+
+  const outSan = createStreamSanitizer("");
+  const errSan = createStreamSanitizer("");
+  let jsonBuf = "";
+
+  const onChunk = (buf, isErr) => {
+    try {
+      fs.writeSync(rawFd, buf);
+    } catch {
+      /* ignore */
+    }
+    if (quietUi) {
+      // Parse JSON lines if any clean line appears
+      jsonBuf += String(buf);
+      // keep jsonBuf bounded
+      if (jsonBuf.length > 500000) jsonBuf = jsonBuf.slice(-100000);
+      // try extract useful JSON events from mixed stream
+      const lines = jsonBuf.split("\n");
+      jsonBuf = lines.pop() || "";
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith("{")) continue;
+        try {
+          const ev = JSON.parse(t);
+          const kind = ev.type || ev.event || ev.kind || "";
+          const tool = ev.tool || ev.name || ev.toolName || "";
+          const text =
+            ev.message?.content ||
+            ev.content ||
+            ev.text ||
+            ev.result ||
+            ev.summary ||
+            "";
+          if (kind && /tool|result|error|assistant|message|done|complete/i.test(String(kind))) {
+            const snippet = String(text || tool || kind).replace(/\s+/g, " ").slice(0, 160);
+            log(`· ${kind}${tool ? " " + tool : ""}${snippet ? ": " + snippet : ""}`);
+          } else if (ev.error) {
+            log(`✗ ${String(ev.error).slice(0, 200)}`);
+          }
+        } catch {
+          /* not pure json */
+        }
+      }
+      return;
+    }
+    if (isErr) errSan.push(buf);
+    else outSan.push(buf);
+  };
+
+  child.stdout?.on("data", (buf) => onChunk(buf, false));
+  child.stderr?.on("data", (buf) => onChunk(buf, true));
+  child.on("error", (err) => {
+    log(`✗ process error: ${err.message}`);
+  });
+  child.on("close", (code) => {
+    try {
+      fs.closeSync(rawFd);
+    } catch {
+      /* ignore */
+    }
+    if (!quietUi) {
+      outSan.flush();
+      errSan.flush();
+    }
+    finishRun(code);
+  });
+
+  // Heartbeat clean status
+  const heartbeat = setInterval(() => {
+    if (state.status !== "running") {
+      clearInterval(heartbeat);
+      return;
+    }
+    const sec = Math.round((Date.now() - new Date(state.startedAt).getTime()) / 1000);
+    log(`… ainda rodando (${sec}s) · pid=${state.pid}`);
+  }, 8000);
+
+  // Watch interesting files for clean progress
+  const watched = new Map(); // path -> mtime
+  const watchPaths = [
+    path.join(__dirname, "e2e-result.md"),
+    path.join(ROOT, "workbench", "HANDOFF.md"),
+    path.join(ROOT, "workbench", "QUEUE.md"),
+  ];
+  const fileWatch = setInterval(() => {
+    if (state.status !== "running") {
+      clearInterval(fileWatch);
+      clearInterval(heartbeat);
+      return;
+    }
+    for (const p of watchPaths) {
+      try {
+        if (!fs.existsSync(p)) continue;
+        const st = fs.statSync(p);
+        const prev = watched.get(p);
+        if (prev && st.mtimeMs !== prev) {
+          log(`📝 atualizado: ${path.relative(ROOT, p)}`);
+        }
+        watched.set(p, st.mtimeMs);
+      } catch {
+        /* ignore */
+      }
+    }
+    // e2e pass auto-stop
+    const e2ePath = path.join(__dirname, "e2e-result.md");
+    try {
+      if (fs.existsSync(e2ePath)) {
+        const txt = fs.readFileSync(e2ePath, "utf8");
+        if (/status:\s*\*\*PASS\*\*|status:\s*PASS/i.test(txt)) {
+          log("✓ e2e-result.md PASS — encerrando (anti-hang)");
+          clearInterval(fileWatch);
+          clearInterval(heartbeat);
+          stopRun();
+          setTimeout(() => {
+            if (state.status === "running") finishRun(0);
+            else if (state.exitCode !== 0) {
+              state.status = "done";
+              state.exitCode = 0;
+              broadcastStatus();
+            }
+          }, 1200);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }, 2000);
+
+  // hard cap 12 min
+  setTimeout(() => {
+    if (state.status === "running") {
+      log("■ timeout 12min — stop");
+      clearInterval(fileWatch);
+      clearInterval(heartbeat);
+      stopRun();
+    }
+  }, 12 * 60 * 1000);
+
+  return {
+    ok: true,
+    executor,
+    playerId: player?.id || null,
+    pid: state.pid,
+    rawLog: path.relative(ROOT, rawLogPath),
+  };
+}
+
+function finishRun(code) {
+  if (state.status !== "running" && state.status !== "error") {
+    // already finalized
+  }
+  state.exitCode = code;
+  state.endedAt = new Date().toISOString();
+  state.status = code === 0 ? "done" : "error";
+  state.pid = null;
+  child = null;
+  log(code === 0 ? "✓ Run finished OK" : `✗ Run finished exit=${code}`);
+  broadcastStatus();
+  try {
+    const snap = {
+      ...state,
+      logs: state.logs.slice(-200),
+    };
+    fs.writeFileSync(
+      path.join(__dirname, "last-run.json"),
+      JSON.stringify(snap, null, 2),
+      "utf8"
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function stopRun() {
+  if (!child) return { ok: false, error: "Nenhuma run ativa" };
+  log("■ Stop requested");
+  try {
+    if (process.platform === "win32" && child.pid) {
+      spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { shell: true });
+    } else {
+      child.kill("SIGTERM");
+    }
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+  return { ok: true };
+}
+
+function contentType(file) {
+  if (file.endsWith(".html")) return "text/html; charset=utf-8";
+  if (file.endsWith(".json")) return "application/json; charset=utf-8";
+  if (file.endsWith(".js")) return "text/javascript; charset=utf-8";
+  if (file.endsWith(".css")) return "text/css; charset=utf-8";
+  if (file.endsWith(".md")) return "text/markdown; charset=utf-8";
+  return "application/octet-stream";
+}
+
+function sendJson(res, status, obj) {
+  const body = JSON.stringify(obj);
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+  });
+  res.end(body);
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => {
+      try {
+        const raw = Buffer.concat(chunks).toString("utf8");
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url || "/", `http://127.0.0.1:${PORT}`);
+  const method = req.method || "GET";
+
+  if (method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    });
+    res.end();
+    return;
+  }
+
+  // API
+  if (url.pathname === "/api/status") {
+    sendJson(res, 200, {
+      status: state.status,
+      executor: state.executor,
+      goal: state.goal,
+      startedAt: state.startedAt,
+      endedAt: state.endedAt,
+      exitCode: state.exitCode,
+      pid: state.pid,
+      logCount: state.logs.length,
+      recentLogs: state.logs.slice(-40),
+    });
+    return;
+  }
+
+  if (url.pathname === "/api/roster") {
+    try {
+      sendJson(res, 200, readRoster());
+    } catch (e) {
+      sendJson(res, 500, { error: String(e) });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/events") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.write(`data: ${JSON.stringify({ type: "hello", status: state.status })}\n\n`);
+    // replay recent
+    for (const line of state.logs.slice(-80)) {
+      res.write(`data: ${JSON.stringify({ type: "log", line })}\n\n`);
+    }
+    sseClients.add(res);
+    req.on("close", () => sseClients.delete(res));
+    return;
+  }
+
+  if (url.pathname === "/api/run" && method === "POST") {
+    try {
+      const body = await readBody(req);
+      const result = startRun(body.goal || body.prompt || "", {
+        executor: body.executor,
+        playerId: body.playerId,
+        maxTurns: body.maxTurns,
+      });
+      sendJson(res, result.ok ? 200 : 409, result);
+    } catch (e) {
+      sendJson(res, 400, { ok: false, error: String(e) });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/stop" && method === "POST") {
+    sendJson(res, 200, stopRun());
+    return;
+  }
+
+  // static from maestro/
+  let rel = url.pathname === "/" ? "/index.html" : url.pathname;
+  rel = path.normalize(rel).replace(/^(\.\.[/\\])+/, "");
+  const filePath = path.join(__dirname, rel);
+  if (!filePath.startsWith(__dirname)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    res.writeHead(200, { "Content-Type": contentType(filePath) });
+    fs.createReadStream(filePath).pipe(res);
+    return;
+  }
+
+  res.writeHead(404);
+  res.end("Not found");
+});
+
+server.listen(PORT, "127.0.0.1", () => {
+  console.log("");
+  console.log(`  🎼  Maestro server  http://127.0.0.1:${PORT}`);
+  console.log(`  Run API            POST /api/run`);
+  console.log(`  Live logs          GET  /api/events (SSE)`);
+  console.log(`  CWD                ${ROOT}`);
+  console.log("");
+});

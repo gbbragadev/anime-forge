@@ -236,6 +236,7 @@
     </header>
 
     <nav class="toc">
+      <a href="#outra-ideia">🔁 Outra ideia</a>
       <a href="#novo-app">⭐ Novo app (1 prompt)</a>
       <a href="#mapa">Mapa mental</a>
       <a href="#sessao">Sessão correta</a>
@@ -247,6 +248,71 @@
       <a href="#erros">Erros comuns</a>
       <a href="#checklist">Checklist</a>
     </nav>
+
+    <!-- OUTRA IDEIA -->
+    <h2 id="outra-ideia"><span class="n">↻</span> Como setar outra ideia</h2>
+    <div class="callout ok">
+      Quando o app atual <strong>terminou o build</strong> (ex. anime-quiz no Pages) e você quer a
+      <strong>próxima aposta</strong>: é um <strong>novo L0</strong>, não “continuar o quiz com outro tema”.
+      Canônico: <code>docs/PLAYBOOK.md</code> · prompt: <code>docs/prompts/L0-NOVA-IDEIA.md</code>
+    </div>
+    <div class="card">
+      <div class="num-path">
+        <div class="dot">1</div>
+        <div class="body">
+          <strong>Fecha o app anterior</strong>
+          <span style="color:var(--muted);font-size:14px">
+            Jobs de build → <strong>Done</strong> na QUEUE. Measure P4 (humano) pode ficar no Backlog à parte.
+            Claim limpo.
+          </span>
+        </div>
+      </div>
+      <div class="num-path">
+        <div class="dot">2</div>
+        <div class="body">
+          <strong>Enfileira P0 da ideia nova</strong>
+          <span style="color:var(--muted);font-size:14px">
+            <code>- [ ] **L0/P0** Scorecard: &lt;app-id&gt; — &lt;uma frase&gt;</code>
+          </span>
+        </div>
+      </div>
+      <div class="num-path">
+        <div class="dot">3</div>
+        <div class="body">
+          <strong>Atualiza HANDOFF</strong>
+          <span style="color:var(--muted);font-size:14px">
+            Loop ativo = ideia nova · Next = P0 → P1 → B1 (B1 só depois)
+          </span>
+        </div>
+      </div>
+      <div class="num-path">
+        <div class="dot">4</div>
+        <div class="body">
+          <strong>Roda scorecard (qualquer sub)</strong>
+          <span style="color:var(--muted);font-size:14px">
+            Cole <code>docs/prompts/L0-NOVA-IDEIA.md</code> ou <code>L0-P0-scorecard.md</code> + a ideia
+          </span>
+        </div>
+      </div>
+      <div class="num-path">
+        <div class="dot">5</div>
+        <div class="body">
+          <strong>Gate</strong>
+          <span style="color:var(--muted);font-size:14px">
+            NO-GO → para · GO → P1 hooks · só então B1 / <code>NOVO-APP.md</code>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;color:var(--cyan)">Frase mágica (trocar de ideia)</h3>
+      <pre class="cmd">Repo: C:\Dev\anime-forge
+Leia AGENTS.md + workbench/HANDOFF.md + QUEUE.md + docs/PLAYBOOK.md (setar outra ideia).
+App anterior FECHADO em build (Done). Measure humano à parte se existir.
+Próximo: L0/P0 da ideia nova. Atualize HANDOFF + QUEUE.
+Não scaffold nesta rodada se só for scorecard.
+IDEIA NOVA: &lt;&lt;&lt; cole aqui &gt;&gt;&gt;</pre>
+    </div>
 
     <!-- NOVO APP 1 PROMPT -->
     <h2 id="novo-app"><span class="n">★</span> Novo app com 1 prompt</h2>

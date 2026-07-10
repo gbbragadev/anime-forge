@@ -2,7 +2,29 @@
 
 > **Abra no browser:** [`GUIA-VISUAL.html`](./GUIA-VISUAL.html) (recomendado)
 
-## Novo app com 1 prompt
+## Como setar outra ideia (app anterior terminou)
+
+Passo a passo canônico: **[`PLAYBOOK.md` § Como setar outra ideia](./PLAYBOOK.md)**  
+Prompt pronto: **[`prompts/L0-NOVA-IDEIA.md`](./prompts/L0-NOVA-IDEIA.md)**
+
+1. App anterior em **Done** na QUEUE (measure humano pode ficar à parte)
+2. Claim limpo
+3. Backlog: `L0/P0 Scorecard: <id> — <frase>`
+4. HANDOFF: loop ativo = ideia nova
+5. Colar `L0-NOVA-IDEIA.md` + a ideia (ou só P0 scorecard)
+6. GO → P1 hooks → só então B1 / `NOVO-APP.md`
+
+```
+Repo: C:\Dev\anime-forge
+Leia AGENTS.md + HANDOFF + QUEUE + docs/PLAYBOOK.md (setar outra ideia).
+App anterior FECHADO em build. Rode L0/P0 da ideia nova.
+Atualize HANDOFF/QUEUE. Não scaffold nesta rodada se só for scorecard.
+IDEIA NOVA: <<< >>>
+```
+
+---
+
+## Novo app com 1 prompt (já com GO / “pode decidir”)
 
 1. Escolha `id`, `name`, one-liner PT-BR, capability=`chat`
 2. Abra `C:\Dev\anime-forge` no agent da **subscription** (Codex recomendado)

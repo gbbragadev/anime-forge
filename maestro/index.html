@@ -240,6 +240,42 @@
     .toast.show { display: block; animation: fade .3s ease; }
     @keyframes fade { from { opacity: 0; transform: translateY(8px); } }
 
+    .logbox {
+      margin-top: 12px;
+      background: #05030a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      height: 280px;
+      overflow: auto;
+      padding: 12px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 11.5px;
+      color: #c4b5fd;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .logbox .err { color: #fb7185; }
+    .logbox .ok { color: #34d399; }
+    select#executor {
+      background: #0a0610;
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    .btn.danger {
+      background: rgba(251,113,133,.2);
+      color: #fb7185;
+      border: 1px solid rgba(251,113,133,.4);
+    }
+    .run-banner {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
     footer {
       margin-top: 32px;
       font-size: 12px;
@@ -258,7 +294,8 @@
         <h1 id="maestro-name">Maestro</h1>
         <p class="tag" id="maestro-tagline">Eu conduzo o ensaio. Você decide a obra.</p>
         <div class="status-row" id="status-row">
-          <span class="pill" id="pill-gui">GUI Bernstein…</span>
+          <span class="pill" id="pill-api">API Maestro…</span>
+          <span class="pill" id="pill-run">idle</span>
           <span class="pill" id="pill-roster">Roster carregando…</span>
         </div>
       </div>
@@ -280,44 +317,54 @@
       </table>
     </div>
 
-    <h2>Presets (1 clique — sem digitar comando)</h2>
+    <h2>Presets (1 clique)</h2>
     <div class="presets" id="presets"></div>
 
-    <h2>Goal livre</h2>
+    <h2>▶ Execução ao vivo</h2>
     <div class="panel">
-      <textarea id="goal" placeholder="Descreva o que o Maestro deve orquestrar…"></textarea>
-      <div class="actions">
-        <button class="btn primary" type="button" id="btn-copy">Copiar goal + abrir Bernstein GUI</button>
-        <button class="btn ghost" type="button" id="btn-yaml">Gerar snippet bernstein.yaml</button>
-        <button class="btn ghost" type="button" id="btn-gui">Abrir execução (GUI)</button>
-        <button class="btn ghost" type="button" id="btn-health">Checar /ui</button>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px">
+        <label style="font-size:13px;color:var(--muted)">Executor
+          <select id="executor">
+            <option value="grok" selected>⚡ Grok solo (recomendado teste)</option>
+            <option value="bernstein">🎼 Bernstein (multi-CLI)</option>
+            <option value="codex">⚙️ Codex</option>
+            <option value="claude">🎨 Claude</option>
+            <option value="gemini">✨ Gemini</option>
+          </select>
+        </label>
+        <span class="run-banner" id="run-banner">Pronto. Escolha preset E2E · só Grok e aperte RUN.</span>
       </div>
-      <p style="margin:12px 0 0;font-size:12px;color:var(--muted)">
-        Browser sozinho não consegue spawnar agents (segurança). O fluxo é:
-        <strong style="color:var(--ink)">clique no preset → goal copiado → GUI Bernstein</strong>
-        (ou rode <code>scripts\start-maestro.ps1</code> uma vez e use só o mouse).
-        Para execução 100% botão, use a GUI após colar o goal.
-      </p>
+      <textarea id="goal" placeholder="Goal da run…"></textarea>
+      <div class="actions">
+        <button class="btn primary" type="button" id="btn-run">▶ RUN</button>
+        <button class="btn danger" type="button" id="btn-stop">■ STOP</button>
+        <button class="btn ghost" type="button" id="btn-copy">Copiar goal</button>
+        <button class="btn ghost" type="button" id="btn-clear">Limpar log</button>
+      </div>
+      <div class="logbox" id="logbox">Aguardando run…<br/>Log limpo = marcos + arquivos (TUI do Grok não aparece aqui).<br/>Suba: npm run maestro → http://127.0.0.1:8787</div>
     </div>
 
     <div class="links">
+      <a href="http://127.0.0.1:8787/" target="_blank" rel="noopener">Maestro server :8787</a>
       <a href="http://127.0.0.1:8052/ui/" target="_blank" rel="noopener">Bernstein GUI :8052</a>
-      <a href="../docs/GUIA-VISUAL.html">Guia visual Forge</a>
-      <a href="../docs/BERNSTEIN-EXPLICADO.md">O que é Bernstein</a>
+      <a href="../docs/MAESTRO.md">docs/MAESTRO.md</a>
+      <a href="../docs/GUIA-VISUAL.html">Guia visual</a>
       <a href="../docs/prompts/NOVO-APP.md">Novo app 1 prompt</a>
-      <a href="../workbench/QUEUE.md">QUEUE</a>
     </div>
 
     <footer>
-      Maestro HQ · Anime Forge · roster version <span id="ver">—</span><br />
-      Produto LLM = Z.AI · Coding agents = subscription CLIs · Workbench = multi-sub handoff
+      Maestro HQ · Anime Forge · roster <span id="ver">—</span><br />
+      RUN real via <code>maestro/server.mjs</code> · default E2E = <strong>Grok solo</strong>
     </footer>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    const GUI = "http://127.0.0.1:8052/ui/";
+    const API = location.port === "8787" ? "" : "http://127.0.0.1:8787";
+    let selectedPlayerId = "grok-solo";
+    let es = null;
+
     const toast = (msg) => {
       const el = document.getElementById("toast");
       el.textContent = msg;
@@ -325,9 +372,19 @@
       setTimeout(() => el.classList.remove("show"), 2800);
     };
 
+    const logbox = document.getElementById("logbox");
+    function appendLog(line, cls) {
+      const span = document.createElement("div");
+      if (cls) span.className = cls;
+      span.textContent = line;
+      logbox.appendChild(span);
+      logbox.scrollTop = logbox.scrollHeight;
+    }
+
     async function loadRoster() {
-      const res = await fetch("./roster.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("roster.json");
+      const url = API ? API + "/api/roster" : "./roster.json";
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("roster");
       return res.json();
     }
 
@@ -337,7 +394,7 @@
       document.getElementById("maestro-face").textContent = m.avatar || "🎼";
       document.getElementById("maestro-name").textContent = m.name;
       document.getElementById("maestro-tagline").textContent = m.tagline;
-      document.getElementById("pill-roster").textContent = `${roster.players.length} músicos no roster`;
+      document.getElementById("pill-roster").textContent = `${roster.players.length} músicos`;
       document.getElementById("pill-roster").classList.add("on");
 
       const players = document.getElementById("players");
@@ -345,6 +402,7 @@
       for (const p of roster.players) {
         const card = document.createElement("div");
         card.className = "player";
+        card.style.cursor = "pointer";
         card.innerHTML = `
           <div class="face" style="background:linear-gradient(135deg,${p.color}55,${p.color}22)">${p.face}</div>
           <h3>${p.name}</h3>
@@ -352,16 +410,20 @@
           <div class="jobs">${(p.jobs || []).map((j) => `<span class="job-tag">${j}</span>`).join("")}</div>
           <p>${p.blurb || ""}</p>
         `;
+        card.addEventListener("click", () => {
+          selectedPlayerId = p.id;
+          document.getElementById("executor").value = p.cli === "grok" ? "grok" : p.cli;
+          toast("Executor: " + p.name);
+        });
         players.appendChild(card);
       }
 
       const tbody = document.querySelector("#dispatch-table tbody");
       tbody.innerHTML = "";
-      const map = roster.dispatch_map || {};
-      for (const [job, playerId] of Object.entries(map)) {
+      for (const [job, playerId] of Object.entries(roster.dispatch_map || {})) {
         const player = roster.players.find((x) => x.id === playerId);
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><strong>${job}</strong></td><td>${player ? player.face + " " + player.name : playerId} <span style="opacity:.7">(${player?.cli || "?"})</span></td>`;
+        tr.innerHTML = `<td><strong>${job}</strong></td><td>${player ? player.face + " " + player.name : playerId} (${player?.cli || "?"})</td>`;
         tbody.appendChild(tr);
       }
 
@@ -371,77 +433,172 @@
         const b = document.createElement("button");
         b.type = "button";
         b.className = "preset";
-        b.innerHTML = `<span class="em">${pr.emoji || "▶"}</span><strong>${pr.label}</strong><span>1 clique → goal pronto</span>`;
+        b.innerHTML = `<span class="em">${pr.emoji || "▶"}</span><strong>${pr.label}</strong><span>clique → preenche · RUN dispara</span>`;
         b.addEventListener("click", () => {
           document.getElementById("goal").value = pr.goal;
+          if (pr.executor) document.getElementById("executor").value = pr.executor;
+          if (pr.playerId) selectedPlayerId = pr.playerId;
           toast("Preset: " + pr.label);
         });
         presets.appendChild(b);
       }
-    }
 
-    async function checkGui() {
-      const pill = document.getElementById("pill-gui");
-      try {
-        const r = await fetch("http://127.0.0.1:8052/ui/", { mode: "no-cors" });
-        // no-cors opaque = server likely up
-        pill.textContent = "GUI :8052 (tente abrir)";
-        pill.classList.add("on");
-      } catch {
-        pill.textContent = "GUI off — rode start-maestro.ps1";
-        pill.classList.add("off");
+      // auto-select E2E Grok preset
+      const e2e = (roster.presets || []).find((p) => p.id === "e2e-grok");
+      if (e2e) {
+        document.getElementById("goal").value = e2e.goal;
+        document.getElementById("executor").value = e2e.executor || "grok";
+        selectedPlayerId = e2e.playerId || "grok-solo";
       }
     }
 
-    document.getElementById("btn-copy").addEventListener("click", async () => {
+    async function checkApi() {
+      const pill = document.getElementById("pill-api");
+      try {
+        const r = await fetch((API || "") + "/api/status");
+        if (!r.ok) throw new Error("bad");
+        const j = await r.json();
+        pill.textContent = "API :8787 online";
+        pill.classList.add("on");
+        setRunPill(j.status, j.executor);
+        return true;
+      } catch {
+        pill.textContent = "API off — node maestro/server.mjs";
+        pill.classList.add("off");
+        return false;
+      }
+    }
+
+    function setRunPill(status, executor) {
+      const pill = document.getElementById("pill-run");
+      const banner = document.getElementById("run-banner");
+      pill.textContent = status + (executor ? " · " + executor : "");
+      pill.classList.remove("on", "off");
+      if (status === "running") {
+        pill.classList.add("on");
+        banner.textContent = "▶ Run em andamento…";
+      } else if (status === "done") {
+        pill.classList.add("on");
+        banner.textContent = "✓ Última run OK";
+      } else if (status === "error") {
+        pill.classList.add("off");
+        banner.textContent = "✗ Última run com erro — veja o log";
+      } else {
+        banner.textContent = "Pronto. Preset E2E · só Grok · aperte RUN.";
+      }
+    }
+
+    function connectSSE() {
+      if (es) es.close();
+      const url = (API || "") + "/api/events";
+      try {
+        es = new EventSource(url);
+      } catch {
+        return;
+      }
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === "log") {
+            let line = msg.line || "";
+            // client-side belt-and-suspenders strip (server already cleans)
+            line = line
+              .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "")
+              .replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g, "")
+              .replace(/\u001b[@-Z\\-_]/g, "")
+              .replace(/\[[\?\d;]*[A-Za-z]/g, "");
+            if (!line.trim()) return;
+            const cls =
+              line.includes("✗") || (line.includes("stderr:") && /error|fail|denied/i.test(line))
+                ? "err"
+                : line.includes("✓")
+                  ? "ok"
+                  : "";
+            // don't paint all stderr red (grok used to dump TUI there)
+            if (line.startsWith("[") && line.includes("stderr:") && !/error|fail|denied|unexpected/i.test(line)) {
+              appendLog(line.replace("stderr: ", ""), "");
+              return;
+            }
+            appendLog(line, cls);
+          }
+          if (msg.type === "status") setRunPill(msg.status, msg.executor);
+        } catch { /* ignore */ }
+      };
+    }
+
+    document.getElementById("btn-run").addEventListener("click", async () => {
       const goal = document.getElementById("goal").value.trim();
       if (!goal) {
         toast("Escolha um preset ou escreva um goal");
         return;
       }
-      const payload =
-        "BERNSTEIN GOAL (Anime Forge / Maestro)\n\n" +
-        goal +
-        "\n\nConstraints: team anime-forge · npm run build · surgical · ZAI product only · no secrets";
-      try {
-        await navigator.clipboard.writeText(payload);
-        toast("Goal copiado — abrindo GUI");
-      } catch {
-        toast("Selecione o goal e copie manualmente (Ctrl+C)");
+      const executor = document.getElementById("executor").value;
+      const online = await checkApi();
+      if (!online) {
+        toast("Suba: node maestro/server.mjs");
+        return;
       }
-      window.open(GUI, "_blank");
-    });
-
-    document.getElementById("btn-yaml").addEventListener("click", async () => {
-      const goal = document.getElementById("goal").value.trim() || "Seu goal aqui";
-      const yaml =
-        "goal: |\n  " +
-        goal.split("\n").join("\n  ") +
-        "\n\ncli: auto\nteam: anime-forge\nbudget: \"$8\"\n";
+      appendLog("--- RUN requested ---");
       try {
-        await navigator.clipboard.writeText(yaml);
-        toast("Snippet YAML copiado → cole em bernstein.yaml");
-      } catch {
-        prompt("Copie o YAML:", yaml);
+        const r = await fetch((API || "") + "/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goal,
+            executor,
+            playerId: selectedPlayerId,
+            maxTurns: 40,
+          }),
+        });
+        const j = await r.json();
+        if (!j.ok) {
+          toast(j.error || "Falha ao iniciar");
+          appendLog("✗ " + (j.error || "fail"), "err");
+          return;
+        }
+        toast("RUN · " + j.executor);
+        setRunPill("running", j.executor);
+      } catch (e) {
+        toast("Erro de rede na API");
+        appendLog(String(e), "err");
       }
     });
 
-    document.getElementById("btn-gui").addEventListener("click", () => {
-      window.open(GUI, "_blank");
+    document.getElementById("btn-stop").addEventListener("click", async () => {
+      try {
+        await fetch((API || "") + "/api/stop", { method: "POST" });
+        toast("STOP enviado");
+      } catch {
+        toast("API offline");
+      }
     });
 
-    document.getElementById("btn-health").addEventListener("click", () => {
-      window.open(GUI, "_blank");
-      toast("Se não abrir: scripts\\start-maestro.ps1");
+    document.getElementById("btn-copy").addEventListener("click", async () => {
+      const goal = document.getElementById("goal").value.trim();
+      if (!goal) return toast("Goal vazio");
+      try {
+        await navigator.clipboard.writeText(goal);
+        toast("Goal copiado");
+      } catch {
+        toast("Ctrl+C manual");
+      }
+    });
+
+    document.getElementById("btn-clear").addEventListener("click", () => {
+      logbox.innerHTML = "";
+      appendLog("Log limpo.");
     });
 
     loadRoster()
       .then(render)
       .catch(() => {
-        document.getElementById("pill-roster").textContent = "Falha ao carregar roster.json";
+        document.getElementById("pill-roster").textContent = "Falha roster";
         document.getElementById("pill-roster").classList.add("off");
       });
-    checkGui();
+    checkApi().then((ok) => {
+      if (ok) connectSSE();
+    });
+    setInterval(checkApi, 8000);
   </script>
 </body>
 </html>

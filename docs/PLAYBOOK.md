@@ -74,6 +74,77 @@ Scale = novos jobs L1 (polish, personas, image) na QUEUE.
 
 Cada um = **novo L0**, não feature escondida no app anterior.
 
+## Como setar outra ideia (app anterior terminou)
+
+Use isto quando o app atual saiu do **build** (ex.: anime-quiz shipped) e você quer a próxima aposta.
+
+### Passo a passo
+
+1. **Fecha o app atual no workbench**
+   - Jobs de build (P0→B5) → **Done** na `workbench/QUEUE.md`
+   - Se ainda for medir: deixe **só** `L0/P4` measure como job **humano** no Backlog (não mistura com o app novo)
+   - Libere `workbench/CLAIMS.md` (sem claim órfão)
+
+2. **Não reaproveite o app antigo como “só mudar copy”**
+   - Produto novo = **novo L0** (e depois `apps/<novo-id>` se for codar)
+   - Measure do anterior pode rodar **em paralelo** (humano + bio), sem bloquear o P0 novo
+
+3. **Enfileira a ideia nova na QUEUE** (`workbench/QUEUE.md` → Backlog):
+
+```markdown
+- [ ] **L0/P0** Scorecard: <app-id> — <uma frase da ideia>
+```
+
+4. **Atualiza o HANDOFF** (`workbench/HANDOFF.md`):
+
+```markdown
+## Loop ativo
+**L0** — nova ideia: <app-id> — <uma frase>
+
+## Next
+1. L0/P0 scorecard <app-id>
+2. Se GO → L0/P1 content hooks
+3. B1 scaffold só após P1 (ou user “pode decidir e seguir”)
+
+## Blockers
+- (vazio ou measure do app anterior = humano)
+```
+
+5. **Roda o scorecard** (qualquer sub: Grok / Gemini / …)
+   - Prompt: `docs/prompts/L0-P0-scorecard.md`
+   - Cole a ideia em `IDEIA: <<< ... >>>`
+   - Salva `docs/scorecard-<app-id>.md`
+   - Agent atualiza QUEUE + HANDOFF
+
+6. **Segue o gate L0**
+   | Resultado P0 | Próximo |
+   |--------------|---------|
+   | **NO-GO** | Para. Só conteúdo/teste sem código (ou outra ideia) |
+   | **GO** | Enfileira **L0/P1** hooks (`docs/prompts/L0-P1-content-hooks.md`) |
+   | Depois P1 | **L1/B1** scaffold (ou prompt `docs/prompts/NOVO-APP.md` se chat clone) |
+
+### Frase mágica (trocar de ideia)
+
+```
+Repo: C:\Dev\anime-forge
+Leia AGENTS.md + workbench/HANDOFF.md + QUEUE.md.
+O app anterior (<id>) está FECHADO em build (Done). Measure humano se existir, à parte.
+Próximo produto: rode L0/P0 da ideia nova no Backlog (ou a que eu colar abaixo).
+Atualize HANDOFF + QUEUE. Não mexa no app anterior salvo bug/ship.
+IDEIA NOVA: <<< cole aqui >>>
+```
+
+### Checklist rápido
+
+- [ ] Build do app anterior em **Done** (não em Doing)
+- [ ] Claim limpo
+- [ ] Backlog tem **L0/P0** da ideia nova (não B1 direto)
+- [ ] HANDOFF “Loop ativo” = ideia nova
+- [ ] Agent leu frase mágica / P0 prompt
+- [ ] Se GO → P1 antes de scaffold (default)
+
+Prompt dedicado: `docs/prompts/L0-NOVA-IDEIA.md`.
+
 ## Anti-padrões
 
 - Super-app com 20 features  

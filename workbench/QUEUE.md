@@ -3,9 +3,13 @@
 Formato: `[ ] **Loop/Job** descrição`  
 Uma iteração = um job. Claim em `CLAIMS.md`.
 
+**Trocar de ideia:** `docs/PLAYBOOK.md` § *Como setar outra ideia* · prompt `docs/prompts/L0-NOVA-IDEIA.md`  
+(App Done → Backlog `L0/P0` do novo · HANDOFF · scorecard · **não** B1 direto)
+
 ## Backlog
 
 - [ ] **L0/P4** Measure anime-quiz (5–7d) — **humano** · URL https://gbbragadev.github.io/anime-forge/ · hooks `docs/content-hooks-anime-quiz.md`
+- [ ] **L0/P0** Scorecard: _próxima ideia_ — _(substitua: app-id + uma frase; ou rode L0-NOVA-IDEIA)_
 - [ ] **Opcional** Deploy waifu-chat (Vercel + keys) — pedido + token
 - [ ] **Opcional** Custom domain Pages
 

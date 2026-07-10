@@ -14,7 +14,9 @@
     "build:quiz": "npm run build -w @anime-forge/anime-quiz",
     "build:all": "npm run build -w @anime-forge/waifu-chat ; npm run build -w @anime-forge/anime-quiz",
     "lint": "npm run lint -w @anime-forge/waifu-chat",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "maestro": "node maestro/server.mjs",
+    "maestro:open": "powershell -ExecutionPolicy Bypass -File scripts/start-maestro.ps1"
   },
   "engines": {
     "node": ">=20"

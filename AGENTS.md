@@ -21,10 +21,12 @@ L2 HANDOFF  → limite → HANDOFF.md → outro agente → mesmo job
 | `segue` | 1 job livre da QUEUE |
 | `pode decidir e seguir` | Decide + executa próximo step lógico |
 | `siga até decisão minha` | Encadeia até gate humano (measure, key, billing, domínio) |
+| `outra ideia` / `próximo app` | **Novo L0** — ver PLAYBOOK § *Como setar outra ideia* + `docs/prompts/L0-NOVA-IDEIA.md` |
 | UI / apelo visual | Prompt denso GLM — **não** implementar UI forte aqui |
 
 - Uma sessão default = **uma** iteração (exceto “siga até decisão” com gates).
 - QUEUE vazia sem pedido → **perguntar**, não inventar app.
+- App anterior **Done** (ship) e user quer próxima aposta → **não** continue no app antigo; P0 da ideia nova.
 
 ## Antes de editar
 

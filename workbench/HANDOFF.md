@@ -1,39 +1,44 @@
 # HANDOFF
 
 ## Loop ativo
-**Meta / harness** — pipeline e loops **atualizados** com lições da sessão; anime-quiz live; próximo produto = **P4 measure (humano)**
+**Standby entre produtos** — anime-quiz **shipped**; harness estável; próxima aposta = **L0/P0** (ainda sem ideia escolhida)
 
 ## Last agent
 grok | 2026-07-10
 
-## Last iteration — melhorar pipeline (esta sessão)
-- Reescreveu `docs/AGENT-PIPELINE.md`: lições produção, atalhos de sessão, gates L0, split B1/B3, ship matrix, VERIFY por tipo de app
-- `AGENTS.md` + skill `ship-niche-app` alinhados (segue / pode decidir / UI→GLM)
-- Prompts: L0-P0, L1-B1, L1-B3, L1-B5 + **`docs/prompts/L1-B3-TEMPLATE.md`**
-- `docs/PLAYBOOK.md` + `workbench/prompts-glm/README.md` + `docs/prompts/README.md`
-- AnimeQuiz continua live: https://gbbragadev.github.io/anime-forge/
+## Handoff canônico (ideia + o que foi feito)
+**Ler primeiro:** `docs/HANDOFF-SESSAO.md`
 
-## Lessons (canônicas)
-1. B1 = funcional; B3 = visual via **prompt GLM denso** (~4→7.5/10)
-2. Content-first P0→P1; B1 sem P1 só com “pode decidir”
-3. Ship: static→GH Pages; server→Vercel+token
-4. :3001 Docker ≠ Next
-5. “siga até decisão” para em measure/key/billing/domínio
+## Last iteration
+- Documentou passo a passo **Como setar outra ideia** (PLAYBOOK, pipeline, GUIA-VISUAL, AGENTS, skill)
+- Prompt `docs/prompts/L0-NOVA-IDEIA.md`
+- Handoff de sessão completo em `docs/HANDOFF-SESSAO.md`
 
-## Done (acumulado produto)
-- waifu-chat MVP + smoke
-- anime-quiz P0→B5 + **Pages**
+## Done (produto)
+| App | Status |
+|-----|--------|
+| **waifu-chat** | MVP + smoke OpenRouter + UI B3 GLM |
+| **anime-quiz** | P0→B5 + **live** https://gbbragadev.github.io/anime-forge/ |
+
+## Done (harness)
+- Loops L0/L1/L2 multi-sub (Claude/Codex/Grok/Gemini + GLM B3)
+- workbench QUEUE/HANDOFF/CLAIMS
+- Guia visual, PLAYBOOK, ship matrix, content-first gates
+- OpenRouter: `OPEN_ROUTER_API_KEY` env sistema (não pedir no chat)
 
 ## Next
-1. **Humano P4:** postar hooks + bio → URL Pages (5–7d)
-2. Opcional: Vercel token p/ waifu-chat deploy
-3. Novo app: só com P0 na QUEUE
+1. **Humano P4** anime-quiz: hooks + bio → URL Pages (5–7d) — `docs/content-hooks-anime-quiz.md`
+2. **L0/P0** próxima ideia: preencher placeholder na QUEUE ou colar `L0-NOVA-IDEIA.md`
+3. Opcional: commit docs; Vercel waifu-chat (token); Maestro ver `docs/HANDOFF-MAESTRO-NEXT.md`
 
 ## Blockers
-- Measure = ação humana (não automizável sem analytics)
-- Vercel deploy server apps: precisa login/token
+- P4 measure = humano
+- Próximo app **sem id/ideia** ainda (user precisa colar)
+- Vercel server deploy = token
 
 ## Links
-- Repo: https://github.com/gbbragadev/anime-forge
+- Handoff sessão: `docs/HANDOFF-SESSAO.md`
 - Quiz: https://gbbragadev.github.io/anime-forge/
+- Repo: https://github.com/gbbragadev/anime-forge
 - Pipeline: `docs/AGENT-PIPELINE.md`
+- Trocar ideia: `docs/PLAYBOOK.md` + `docs/prompts/L0-NOVA-IDEIA.md`

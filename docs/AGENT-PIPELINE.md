@@ -45,6 +45,24 @@ Coding agent = só subscription. Keys de produto: ler env, nunca pedir no chat.
 | `siga até decisão minha` | Encadeia jobs **só** enquanto não precisar de: measure humano, key nova, billing, domínio, ou produto ambíguo |
 | UI feia / apelo visual | **Não codar UI** → gerar prompt denso em `workbench/prompts-glm/` (GLM 5.2 MAX) |
 | commit / push / deploy liberado | Fazer até o ship path documentado; se faltar token, fallback + HANDOFF |
+| `outra ideia` / `próximo app` / `setar ideia nova` | Ver **Como setar outra ideia** abaixo + `docs/PLAYBOOK.md` + prompt `docs/prompts/L0-NOVA-IDEIA.md` |
+
+---
+
+## Como setar outra ideia (app anterior terminou)
+
+Quando um app saiu do build (ex. anime-quiz em Pages) e o user quer a **próxima aposta**:
+
+1. **Done** nos jobs de build do app anterior na `QUEUE.md` (P4 measure humano pode ficar no Backlog, à parte)
+2. Liberar `CLAIMS.md`
+3. Backlog: `- [ ] **L0/P0** Scorecard: <app-id> — <frase>`
+4. `HANDOFF.md`: Loop ativo = ideia nova; Next = P0 → P1 → B1
+5. Rodar `docs/prompts/L0-P0-scorecard.md` (ou `L0-NOVA-IDEIA.md`)
+6. GO → P1 hooks; **não** B1 sem P0 GO (e preferir P1 antes do scaffold)
+
+**Não** reescrever o app antigo “só mudando tema” se for produto novo — novo L0 / novo `apps/<id>`.
+
+Passo a passo completo + frase mágica: **`docs/PLAYBOOK.md`** § *Como setar outra ideia*.
 
 ---
 

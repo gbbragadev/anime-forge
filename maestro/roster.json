@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "maestro": {
     "id": "maestro",
     "name": "Maestro",
@@ -20,6 +20,19 @@
     ]
   },
   "players": [
+    {
+      "id": "grok-solo",
+      "face": "⚡",
+      "name": "Grok Solo",
+      "cli": "grok",
+      "adapter": "grok",
+      "model": "default",
+      "effort": "high",
+      "jobs": ["E2E", "B1", "B2", "B4", "B5", "L1-any"],
+      "roles": ["backend", "frontend", "qa"],
+      "color": "#22d3ee",
+      "blurb": "Grok Build CLI headless — run completa solo (subscription xAI)."
+    },
     {
       "id": "claude-frontend",
       "face": "🎨",
@@ -82,32 +95,41 @@
     "L1/B3": "claude-frontend",
     "L1/B4": "codex-backend",
     "L1/B5": "claude-qa",
-    "default": "codex-backend"
+    "E2E": "grok-solo",
+    "default": "grok-solo"
   },
   "presets": [
+    {
+      "id": "e2e-grok",
+      "label": "E2E teste · só Grok",
+      "emoji": "⚡",
+      "executor": "grok",
+      "playerId": "grok-solo",
+      "goal": "E2E TESTE MAESTRO (Grok solo) — execute do início ao fim:\n1) Crie o arquivo maestro/e2e-result.md com: data ISO, executor=grok, status=PASS ou FAIL, 3 bullets do que fez.\n2) Em workbench/HANDOFF.md, adicione seção ## E2E Maestro Grok com 2-3 linhas (resultado + próximo).\n3) Rode npm run build na raiz C:\\Dev\\anime-forge e registre o exit code no e2e-result.md.\n4) NÃO altere packages/, apps/waifu-chat/src, content/personas, .env.local.\n5) NÃO peça API keys. Sucesso = e2e-result.md existe + build documentado."
+    },
     {
       "id": "scaffold-app",
       "label": "Scaffold app novo",
       "emoji": "🧱",
-      "goal": "Siga docs/prompts/NOVO-APP.md. Crie um app de demonstração id=demo-spark name=DemoSpark one-liner='Chat anime demo da factory'. capability=chat. 4 personas OCs. NÃO mude waifu-chat além de copiar. npm run build deve passar. Atualize workbench/HANDOFF.md."
+      "executor": "grok",
+      "playerId": "grok-solo",
+      "goal": "Siga docs/prompts/NOVO-APP.md. Crie app id=demo-spark name=DemoSpark one-liner='Chat anime demo da factory'. capability=chat. 4 personas OCs. NÃO mude waifu-chat além de copiar. npm run build deve passar. Atualize workbench/HANDOFF.md."
     },
     {
       "id": "ship-check",
       "label": "Ship check WaifuChat",
       "emoji": "✅",
-      "goal": "Rode ship check do WaifuChat: npm run build, confira GET /api/health (provider zai), free quota e disclaimer. Documente PASS/FAIL em workbench/HANDOFF.md. Não refatore UI."
+      "executor": "grok",
+      "playerId": "grok-solo",
+      "goal": "Ship check WaifuChat: npm run build, confira que app.config usa provider zai e modelo glm flash. Documente PASS/FAIL em workbench/HANDOFF.md. Não refatore UI. Não leia/imprima secrets de .env.local."
     },
     {
       "id": "personas-pack",
       "label": "Pack personas +4",
       "emoji": "🎭",
-      "goal": "Adicione 4 personas ORIGINAIS em content/personas/ (PT-BR system+starter+tags+color). Wire no app.config do waifu-chat se necessário. npm run build. Não mexer em packages/ai."
-    },
-    {
-      "id": "api-smoke",
-      "label": "API + health Z.AI",
-      "emoji": "⚡",
-      "goal": "Verifique packages/ai product provider zai + glm-4.5-flash, /api/health e chat route. Corrija só se quebrado. npm run build. Não commitar secrets."
+      "executor": "grok",
+      "playerId": "grok-solo",
+      "goal": "Adicione 4 personas ORIGINAIS em content/personas/ (PT-BR). Wire no app.config do waifu-chat se necessário. npm run build. Não mexer em packages/ai."
     }
   ]
 }

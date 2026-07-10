@@ -1,59 +1,40 @@
-# Maestro HQ launcher — zero typing (duplo clique)
-# Inicia Bernstein GUI + abre o painel visual da Anime Forge
+# Maestro HQ — server + browser (zero typing)
+# Duplo clique ou: powershell -File scripts/start-maestro.ps1
 
 $ErrorActionPreference = "Continue"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $Root
 
-$Port = 8052
-$MaestroHtml = Join-Path $Root "maestro\index.html"
-$UiUrl = "http://127.0.0.1:$Port/ui/"
+$MaestroPort = 8787
+$Ui = "http://127.0.0.1:$MaestroPort/"
 
 Write-Host ""
 Write-Host "  🎼  Maestro HQ — Anime Forge" -ForegroundColor Magenta
-Write-Host "  Repo: $Root" -ForegroundColor DarkGray
+Write-Host "  $Root" -ForegroundColor DarkGray
 Write-Host ""
 
-# Bernstein on PATH?
-$bern = Get-Command bernstein -ErrorAction SilentlyContinue
-if (-not $bern) {
-  Write-Host "  Bernstein não encontrado no PATH." -ForegroundColor Yellow
-  Write-Host "  Instale: uv tool install bernstein" -ForegroundColor Yellow
-  Write-Host "  Abrindo só o Maestro HQ local..." -ForegroundColor Yellow
-  if (Test-Path $MaestroHtml) { Start-Process $MaestroHtml }
+# Ensure node
+$node = Get-Command node -ErrorAction SilentlyContinue
+if (-not $node) {
+  Write-Host "  Node.js não encontrado no PATH." -ForegroundColor Red
   pause
   exit 1
 }
 
-# Open branded HQ first
-if (Test-Path $MaestroHtml) {
-  Start-Process $MaestroHtml
-  Write-Host "  ✓ Maestro HQ aberto (visual + roster)" -ForegroundColor Green
-}
-
-# Start GUI server if port free
-$portInUse = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-if (-not $portInUse) {
-  Write-Host "  → Iniciando bernstein gui serve (porta $Port)..." -ForegroundColor Cyan
-  Start-Process -FilePath "bernstein" -ArgumentList "gui","serve","--port",$Port -WorkingDirectory $Root -WindowStyle Minimized
-  Start-Sleep -Seconds 3
+# Start Maestro server if needed
+$busy = Get-NetTCPConnection -LocalPort $MaestroPort -ErrorAction SilentlyContinue
+if (-not $busy) {
+  Write-Host "  → node maestro/server.mjs (porta $MaestroPort)" -ForegroundColor Cyan
+  Start-Process -FilePath "node" -ArgumentList "maestro/server.mjs" -WorkingDirectory $Root -WindowStyle Minimized
+  Start-Sleep -Seconds 2
 } else {
-  Write-Host "  ✓ Porta $Port já em uso (GUI talvez já rodando)" -ForegroundColor Green
+  Write-Host "  ✓ Maestro já em :$MaestroPort" -ForegroundColor Green
 }
 
-Start-Sleep -Seconds 1
-try {
-  Start-Process $UiUrl
-  Write-Host "  ✓ Bernstein GUI: $UiUrl" -ForegroundColor Green
-} catch {
-  Write-Host "  Abra manualmente: $UiUrl" -ForegroundColor Yellow
-}
-
+Start-Process $Ui
+Write-Host "  ✓ Aberto $Ui" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Como usar:" -ForegroundColor White
-Write-Host "  1. Maestro HQ = cara, roster, presets (clique)" -ForegroundColor DarkGray
-Write-Host "  2. Bernstein GUI = execução ao vivo dos agents" -ForegroundColor DarkGray
-Write-Host "  3. Modelos fixos em maestro/roster.json + team anime-forge" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  Feche esta janela se quiser; a GUI continua em background." -ForegroundColor DarkGray
+Write-Host "  1. Clique preset: E2E teste · só Grok" -ForegroundColor White
+Write-Host "  2. Clique RUN" -ForegroundColor White
+Write-Host "  3. Acompanhe o log ao vivo" -ForegroundColor White
 Write-Host ""

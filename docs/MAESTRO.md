@@ -91,12 +91,31 @@ bernstein dashboard     # abre browser na GUI
 Maestro HQ **não substitui** a GUI de execução; ele é a **recepção + partitura + caras**.  
 A GUI Bernstein é o **palco ao vivo**.
 
-## Limite do browser
+## Run real (botão ▶)
 
-HTML local **não pode** spawnar `codex`/`claude` sozinho (sandbox do browser).  
-Por isso o fluxo é: **HQ (clique) → goal na área de transferência → GUI Bernstein (execução)**.
+```powershell
+cd C:\Dev\anime-forge
+node maestro/server.mjs
+# ou: .\scripts\start-maestro.ps1
+# abra http://127.0.0.1:8787
+```
 
-Se no futuro quiser botão “Run” 100% na página, dá para um mini servidor local (`maestro/server.mjs`) que chama `bernstein -g` — fase 2.
+| API | Função |
+|-----|--------|
+| `POST /api/run` | `{ goal, executor: "grok"\|"bernstein"\|"codex"\|"claude", playerId }` |
+| `POST /api/stop` | mata a run |
+| `GET /api/events` | SSE — log ao vivo |
+| `GET /api/status` | estado da run |
+
+### Executor **Grok solo** (E2E)
+
+Preset **E2E teste · só Grok** no HQ:
+
+1. Dispara `grok.exe` headless (`--always-approve`, `--check`)
+2. Stream de log no painel
+3. Goal cria `maestro/e2e-result.md` + HANDOFF + `npm run build`
+
+Roster: player `grok-solo` · CLI em `%USERPROFILE%\.grok\bin\grok.exe`.
 
 ## Arquivos
 
