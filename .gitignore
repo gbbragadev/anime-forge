@@ -21,3 +21,7 @@ NUL
 .sdd/memory/
 .sdd/catalogs/
 
+
+# Next static export
+apps/*/out/
+
