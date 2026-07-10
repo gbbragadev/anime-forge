@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "2.0",
   "maestro": {
     "id": "maestro",
     "name": "Maestro",
@@ -85,8 +85,89 @@
       "color": "#a78bfa",
       "blurb": "Personas, hooks, scorecard. (CLI no PATH se instalada.)",
       "optional": true
+    },
+    {
+      "id": "glm-front",
+      "face": "🖌️",
+      "name": "GLM Front",
+      "cli": "claude",
+      "env": "glm",
+      "adapter": "glm",
+      "model": "opus",
+      "effort": "max",
+      "jobs": ["B3", "L1-ui"],
+      "roles": ["frontend"],
+      "color": "#00b8a9",
+      "blurb": "GLM-5.2 headless (Claude Code + backend Z.ai) — UI polish B3 sem copiar prompt na mão."
+    },
+    {
+      "id": "claude-opus",
+      "face": "🧠",
+      "name": "Claude Opus",
+      "cli": "claude",
+      "adapter": "claude",
+      "model": "opus",
+      "effort": "high",
+      "jobs": ["B1", "B2", "B4", "B5", "P0", "P1", "L1-any"],
+      "roles": ["backend", "frontend", "architect"],
+      "color": "#f97316",
+      "blurb": "Executor de qualidade (Anthropic OAuth) para o preset quality."
+    },
+    {
+      "id": "codex-review",
+      "face": "🧐",
+      "name": "Codex Review",
+      "cli": "codex",
+      "adapter": "codex",
+      "model": "default",
+      "effort": "high",
+      "jobs": ["review"],
+      "roles": ["reviewer"],
+      "color": "#eab308",
+      "blurb": "GPT-5.5 revisando após jobs críticos (preset quality)."
+    },
+    {
+      "id": "fake-dry",
+      "face": "🎭",
+      "name": "Fake (dry-run)",
+      "cli": "fake",
+      "adapter": "fake",
+      "model": "default",
+      "effort": "low",
+      "jobs": ["*"],
+      "roles": ["test"],
+      "color": "#64748b",
+      "blurb": "Executor simulado para testar a pipeline sem gastar limite.",
+      "hidden": true
     }
   ],
+  "teams": {
+    "grok-solo": {
+      "label": "Só Grok",
+      "emoji": "⚡",
+      "dispatch": { "default": "grok-solo" },
+      "fallbacks": { "grok-solo": ["codex-backend", "claude-frontend"] }
+    },
+    "grok-glm-front": {
+      "label": "Grok + GLM no front",
+      "emoji": "🖌️",
+      "dispatch": { "L1/B3": "glm-front", "default": "grok-solo" },
+      "fallbacks": { "grok-solo": ["codex-backend"], "glm-front": ["claude-frontend"] }
+    },
+    "quality": {
+      "label": "Opus executa · Codex revisa · GLM front",
+      "emoji": "🧠",
+      "dispatch": { "L1/B3": "glm-front", "default": "claude-opus" },
+      "review": { "after": ["L1/B1", "L1/B4"], "player": "codex-review" },
+      "fallbacks": { "claude-opus": ["codex-backend", "grok-solo"], "glm-front": ["claude-frontend"] }
+    },
+    "dry-run": {
+      "label": "Dry-run (fake)",
+      "emoji": "🎭",
+      "dispatch": { "default": "fake-dry" },
+      "fallbacks": {}
+    }
+  },
   "dispatch_map": {
     "L0/P0": "gemini-copy",
     "L0/P1": "gemini-copy",

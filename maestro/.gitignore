@@ -3,3 +3,4 @@ last-run.json
 .run-goal.txt
 runs/
 _stderr_sample.txt
+pipeline.json

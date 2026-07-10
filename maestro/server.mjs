@@ -15,6 +15,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+// buildSpawn = matriz única de executores (compartilhada com a engine).
+// Sanitizers locais mantidos aqui (equivalentes aos de adapters.mjs).
+import { buildSpawn } from "./adapters.mjs";
+import { createEngine } from "./engine.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -274,57 +278,19 @@ function startRun(goal, opts = {}) {
     return { ok: false, error: String(e) };
   }
 
-  /** @type {string} */
-  let cmd;
-  /** @type {string[]} */
-  let args;
-  /** @type {boolean} */
-  let useShell = false;
-
-  if (executor === "bernstein") {
-    cmd = "bernstein";
-    // bernstein -g from file content read by us
-    args = ["-g", fullGoal.replace(/\r?\n/g, " · ")];
-    useShell = false;
-  } else if (executor === "codex") {
-    cmd = "codex";
-    args = ["exec", "--full-auto", fullGoal.replace(/\r?\n/g, " ")];
-    useShell = false;
-  } else if (executor === "claude") {
-    cmd = "claude";
-    args = [
-      "-p",
-      fullGoal.replace(/\r?\n/g, "\n"),
-      "--permission-mode",
-      "bypassPermissions",
-      "--max-turns",
-      String(maxTurns),
-    ];
-    useShell = false;
-  } else if (executor === "gemini") {
-    cmd = "gemini";
-    args = ["-p", fullGoal.replace(/\r?\n/g, " "), "-y"];
-    useShell = false;
-  } else {
-    // Grok: TUI polui stdout/stderr — HQ NÃO mostra raw; só status + file watch.
-    // --output-format json no fim; raw vai para maestro/runs/*.raw.log
-    cmd = resolveBin("grok");
-    args = [
-      "--cwd",
-      ROOT,
-      "--always-approve",
-      "--permission-mode",
-      "bypassPermissions",
-      "--max-turns",
-      String(maxTurns),
-      "--output-format",
-      "json",
-      "--no-alt-screen",
-      "--check",
-      fullGoal,
-    ];
-    useShell = false;
+  // Matriz de executores unificada em adapters.mjs (mesma da engine autopilot)
+  let spec;
+  try {
+    spec = buildSpawn(executor, fullGoal, { root: ROOT, maxTurns });
+  } catch (err) {
+    state.status = "error";
+    state.exitCode = 1;
+    state.endedAt = new Date().toISOString();
+    log(`✗ executor inválido: ${err instanceof Error ? err.message : err}`);
+    broadcastStatus();
+    return { ok: false, error: String(err) };
   }
+  const { cmd, args } = spec;
 
   const runsDir = path.join(__dirname, "runs");
   fs.mkdirSync(runsDir, { recursive: true });
@@ -341,15 +307,8 @@ function startRun(goal, opts = {}) {
   try {
     child = spawn(cmd, args, {
       cwd: ROOT,
-      env: {
-        ...process.env,
-        FORCE_COLOR: "0",
-        NO_COLOR: "1",
-        TERM: "dumb",
-        CI: "1",
-        GROK_NO_TUI: "1",
-      },
-      shell: useShell,
+      env: spec.env,
+      shell: false,
       windowsHide: true,
     });
   } catch (err) {
@@ -567,8 +526,32 @@ function contentType(file) {
   if (file.endsWith(".js")) return "text/javascript; charset=utf-8";
   if (file.endsWith(".css")) return "text/css; charset=utf-8";
   if (file.endsWith(".md")) return "text/markdown; charset=utf-8";
+  if (file.endsWith(".png")) return "image/png";
+  if (file.endsWith(".svg")) return "image/svg+xml";
+  if (file.endsWith(".ico")) return "image/x-icon";
+  if (file.endsWith(".webp")) return "image/webp";
+  if (file.endsWith(".txt")) return "text/plain; charset=utf-8";
   return "application/octet-stream";
 }
+
+// ---------- Forge autopilot (pipeline engine) ----------
+
+function broadcastPipeline(snap) {
+  const data = `data: ${JSON.stringify({ type: "pipeline", pipeline: snap })}\n\n`;
+  for (const res of sseClients) {
+    try {
+      res.write(data);
+    } catch {
+      sseClients.delete(res);
+    }
+  }
+}
+
+const engine = createEngine({
+  root: ROOT,
+  emitLog: (line) => log(line),
+  emitPipeline: broadcastPipeline,
+});
 
 function sendJson(res, status, obj) {
   const body = JSON.stringify(obj);
@@ -668,6 +651,63 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/api/stop" && method === "POST") {
     sendJson(res, 200, stopRun());
+    return;
+  }
+
+  // ---------- Forge autopilot ----------
+
+  if (url.pathname === "/api/pipeline" && method === "GET") {
+    sendJson(res, 200, engine.snapshot());
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/pipeline/") && method === "POST") {
+    try {
+      const body = await readBody(req);
+      const action = url.pathname.split("/").pop();
+      if (action === "start") {
+        sendJson(res, 200, { ok: true, pipeline: engine.start(body) });
+      } else if (action === "decide") {
+        sendJson(res, 200, { ok: true, pipeline: engine.decide(body.gateId, body.choice, body.feedback) });
+      } else if (action === "stop") {
+        sendJson(res, 200, engine.stop());
+      } else if (action === "resume") {
+        sendJson(res, 200, { ok: true, pipeline: engine.resume() });
+      } else {
+        sendJson(res, 404, { ok: false, error: `ação desconhecida: ${action}` });
+      }
+    } catch (e) {
+      sendJson(res, 409, { ok: false, error: e instanceof Error ? e.message : String(e) });
+    }
+    return;
+  }
+
+  // Preview estático do app buildado (gate visual pós-B3): /preview/<appId>/...
+  if (url.pathname.startsWith("/preview/")) {
+    const parts = url.pathname.split("/").filter(Boolean);
+    const appId = parts[1] || "";
+    if (!/^[a-z0-9-]+$/.test(appId)) {
+      res.writeHead(400);
+      res.end("app id inválido");
+      return;
+    }
+    const outDir = path.join(ROOT, "apps", appId, "out");
+    const relPath = parts.slice(2).join("/") || "index.html";
+    let f = path.normalize(path.join(outDir, relPath));
+    if (!f.startsWith(outDir)) {
+      res.writeHead(403);
+      res.end("Forbidden");
+      return;
+    }
+    if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, "index.html");
+    if (!fs.existsSync(f) && fs.existsSync(`${f}.html`)) f = `${f}.html`;
+    if (fs.existsSync(f) && fs.statSync(f).isFile()) {
+      res.writeHead(200, { "Content-Type": contentType(f) });
+      fs.createReadStream(f).pipe(res);
+      return;
+    }
+    res.writeHead(404);
+    res.end("preview não buildado — rode o build do app primeiro");
     return;
   }
 
