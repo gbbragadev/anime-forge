@@ -35,9 +35,12 @@ após 3 falhas · merge+push em master **só** no gate de deploy.
 
 **Rate-limit = L2 automático:** player entra em cooldown 60min e o fallback do team assume.
 
-**Deploy:** `cf-pages` → `<app>.gbbragadev.com` (⚠ exige `CLOUDFLARE_API_TOKEN` com
-Pages:Edit + DNS:Edit — o gate mostra 3 passos manuais se o token for read-only) ·
-`vercel` p/ apps server (`VERCEL_TOKEN`).
+**Deploy:** `cf-pages` → `<app>.gbbragadev.com` usando o token **`CF_GBBRAGADEV_ADM`**
+(admin; verificado real com o quiz → https://quiz.gbbragadev.com) · `vercel` p/ apps
+server (`VERCEL_TOKEN`). Sem token válido o gate mostra 3 passos manuais.
+
+**Início rápido:** digite `.\forge` na raiz do repo (ou `npm run forge`) → tela de setup:
+ideia → time (↑↓) → tipo → Enter. `forge help` p/ o resto.
 
 **Gotcha Grok (importante):** headless de verdade é `grok -p/--single` — goal posicional abre
 a TUI interativa e NUNCA sai (era a causa do hang + ANSI soup). Já corrigido em
