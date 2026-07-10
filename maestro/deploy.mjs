@@ -80,8 +80,9 @@ function run(cmd, env = {}, timeout = 5 * 60 * 1000, cwd = process.cwd()) {
     }
     return { ok: true, output: result.stdout.trim() };
   } catch (e) {
-    const tail = String(e).slice(-500);
-    return { ok: false, error: String(e.message), tail };
+    const strip = (s) => String(s).replace(/\x1b\[[0-9;]*m/g, "");
+    const tail = strip(e).slice(-500);
+    return { ok: false, error: strip(e.message ?? e).slice(0, 300), tail };
   }
 }
 
@@ -157,18 +158,26 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
       if (!retryRes.ok) {
         return { ok: false, error: "wrangler deploy falhou mesmo após criar projeto", fallbackSteps: [] };
       }
-    } else if (/403|unauthorized|invalid.*token|read.?only/i.test(deployRes.tail)) {
+    } else if (/403|unauthorized|authentication error|code:\s*10000|invalid.*token|read.?only/i.test(deployRes.tail)) {
       return {
         ok: false,
-        error: "CLOUDFLARE_API_TOKEN inválido ou read-only",
+        error: "CLOUDFLARE_API_TOKEN sem permissão de escrita (read-only)",
         fallbackSteps: [
-          `1. dashboard.cloudflare.com → Profile → API Tokens`,
-          `2. Edit token com permissão Cloudflare Pages (Edit)`,
-          `3. Setando CLOUDFLARE_API_TOKEN no ambiente`,
+          `1. dash.cloudflare.com → My Profile → API Tokens → edite o token e adicione Cloudflare Pages:Edit + Zone DNS:Edit (zona gbbragadev.com)`,
+          `2. Atualize a env CLOUDFLARE_API_TOKEN no Windows com o novo valor e reinicie o server (npm run maestro)`,
+          `3. Re-decida o gate: forge decide <gate> retry`,
         ],
       };
     }
-    return { ok: false, error: `wrangler deploy falhou: ${deployRes.error}`, fallbackSteps: [] };
+    return {
+      ok: false,
+      error: `wrangler deploy falhou: ${deployRes.error}`,
+      fallbackSteps: [
+        `1. Rode manualmente: npx wrangler pages deploy apps/${appId}/out --project-name ${appId}`,
+        `2. No dash do Pages, adicione o custom domain ${deploy.subdomain}.gbbragadev.com`,
+        `3. forge decide <gate> retry quando o site responder`,
+      ],
+    };
   }
 
   log(`✓ deployed to Pages`);
