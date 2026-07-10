@@ -100,6 +100,31 @@ export function resolveBin(name) {
   return name;
 }
 
+/**
+ * Redator de segredos: mascara valores de env sensíveis antes de qualquer
+ * escrita em log/raw log (ex.: wrangler ecoando token em mensagem de erro).
+ */
+export function makeRedactor() {
+  const secrets = [
+    "GLM_API_KEY",
+    "CLOUDFLARE_API_TOKEN",
+    "VERCEL_TOKEN",
+    "ANTHROPIC_AUTH_TOKEN",
+    "ANTHROPIC_API_KEY",
+    "OPEN_ROUTER_API_KEY",
+    "OPENROUTER_API_KEY",
+    "ZAI_API_KEY",
+    "GITHUB_TOKEN",
+  ]
+    .map((k) => process.env[k])
+    .filter((v) => v && v.length >= 8);
+  return (s) => {
+    let out = String(s);
+    for (const v of secrets) out = out.split(v).join("[redacted]");
+    return out;
+  };
+}
+
 /** Sinais de rate-limit/quota → L2 automático (cooldown + fallback player) */
 export function detectRateLimit(text) {
   return /(429|rate.?limit|usage limit|quota (exceeded|reached)|limit (reached|exceeded)|overloaded_error)/i.test(

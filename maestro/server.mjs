@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 // buildSpawn = matriz única de executores (compartilhada com a engine).
 // Sanitizers locais mantidos aqui (equivalentes aos de adapters.mjs).
-import { buildSpawn } from "./adapters.mjs";
+import { buildSpawn, makeRedactor } from "./adapters.mjs";
 import { createEngine } from "./engine.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -359,7 +359,9 @@ function startRun(goal, opts = {}) {
   const errSan = createStreamSanitizer("");
   let jsonBuf = "";
 
+  const redact = makeRedactor();
   const onChunk = (buf, isErr) => {
+    buf = redact(buf); // nunca gravar segredos em raw log
     try {
       fs.writeSync(rawFd, buf);
     } catch {

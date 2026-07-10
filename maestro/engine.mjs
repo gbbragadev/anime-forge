@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, execFileSync, execSync } from "node:child_process";
-import { buildSpawn, createStreamSanitizer, detectRateLimit } from "./adapters.mjs";
+import { buildSpawn, createStreamSanitizer, detectRateLimit, makeRedactor } from "./adapters.mjs";
 import * as workbench from "./workbench.mjs";
 
 const JOB_TEMPLATES = {
@@ -259,12 +259,14 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       }
       child = proc;
 
+      const redact = makeRedactor();
       const onChunk = (buf) => {
+        const clean = redact(buf); // nunca gravar segredos em raw log/tail
         try {
-          fs.writeSync(rawFd, buf);
+          fs.writeSync(rawFd, clean);
         } catch {}
-        tail = (tail + String(buf)).slice(-8000);
-        san.push(buf);
+        tail = (tail + clean).slice(-8000);
+        san.push(clean);
       };
       proc.stdout?.on("data", onChunk);
       proc.stderr?.on("data", onChunk);
@@ -532,6 +534,16 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       git(["commit", "-m", `forge(${pipeline.appId}): workbench final (${status})`]);
     } catch {
       /* nada a commitar = ok */
+    }
+    // done real = branch já mergeada em master → deleta (-d falha se não mergeada).
+    // killed/dry-run: branch fica p/ inspeção — apagar é decisão do humano.
+    if (status === "done" && !pipeline.dryRun) {
+      try {
+        git(["branch", "-d", pipeline.git.branch]);
+        log(`✓ branch ${pipeline.git.branch} removida (merged em master)`);
+      } catch {
+        log(`· branch ${pipeline.git.branch} mantida (não mergeada?)`);
+      }
     }
   }
 
