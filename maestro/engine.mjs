@@ -325,8 +325,11 @@ export function createEngine({ root, emitLog, emitPipeline }) {
     for (;;) {
       const player = pickPlayer(job, excluded);
       if (!player) {
+        p.currentPlayer = null;
         return { pass: false, exhausted: true, detail: "todos os players do preset esgotados" };
       }
+      p.currentPlayer = player.id;
+      save();
       workbench.claimSet(paths, player.id, job.startsWith("L0") ? "L0" : "L1", job, p.appId);
       workbench.queueStart(paths, job, p.appId);
 
@@ -361,6 +364,7 @@ export function createEngine({ root, emitLog, emitPipeline }) {
         save();
 
         if (v.pass) {
+          p.currentPlayer = null;
           workbench.claimFree(paths);
           workbench.queueDone(paths, job, p.appId, player.id);
           return { pass: true, player, detail: v.detail };
