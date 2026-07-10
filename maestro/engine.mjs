@@ -146,6 +146,7 @@ export function createEngine({ root, emitLog, emitPipeline }) {
         : "",
       "",
       "Regras da pipeline Forge:",
+      "- Conteúdo user-facing SEMPRE bilíngue: PT-BR + EN (toggle de idioma ou i18n simples; copy dos dois desde o primeiro build).",
       "- Execute UMA iteração deste job apenas; não avance para outros jobs.",
       "- NÃO rode git commit/push — o orquestrador Forge cuida do git.",
       "- Atualize workbench/HANDOFF.md ao final com 2-3 linhas do que fez.",
