@@ -532,6 +532,13 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       fs.mkdirSync(RUNS_DIR, { recursive: true });
       fs.copyFileSync(PIPELINE_PATH, path.join(RUNS_DIR, `pipeline-${pipeline.runId}.json`));
     } catch {}
+    // workbench atualizado após o último checkpoint — commita p/ deixar a árvore limpa
+    try {
+      git(["add", "workbench", "docs"]);
+      git(["commit", "-m", `forge(${pipeline.appId}): workbench final (${status})`]);
+    } catch {
+      /* nada a commitar = ok */
+    }
   }
 
   // ---------- API pública ----------
