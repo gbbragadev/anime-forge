@@ -121,6 +121,14 @@ function parseArgs(argv) {
 const JOB_SHORT = { "L0/P0": "P0", "L0/P1": "P1", "L1/B1": "B1", "L1/B2": "B2", "L1/B3": "B3", "L1/B4": "B4", "L1/B5": "B5", P3: "ship" };
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
+let keysEnabled = false;
+function enableKeys() {
+  if (keysEnabled) return;
+  keysEnabled = true;
+  readline.emitKeypressEvents(process.stdin);
+  if (process.stdin.isTTY) process.stdin.setRawMode(true);
+}
+
 function elapsed(fromIso, toIso) {
   if (!fromIso) return "—";
   const ms = (toIso ? new Date(toIso) : new Date()) - new Date(fromIso);
@@ -210,8 +218,7 @@ async function attachTUI() {
     }
   }
 
-  readline.emitKeypressEvents(process.stdin);
-  if (process.stdin.isTTY) process.stdin.setRawMode(true);
+  enableKeys();
   process.stdin.on("keypress", async (str, key) => {
     if (state.input) {
       if (key.name === "return") {
@@ -350,6 +357,134 @@ async function attachTUI() {
   render();
 }
 
+// ---------- setup wizard (forge sem args — estilo tela inicial de harness) ----------
+async function wizard() {
+  await ensureServer();
+  let roster = null;
+  try {
+    roster = await api("/api/roster");
+  } catch {}
+  const teams = Object.entries(roster?.teams || {});
+  if (!teams.length) throw new Error("roster sem teams — confira maestro/roster.json");
+  const caps = [
+    ["static", "site estático (export → <app>.gbbragadev.com)"],
+    ["quiz", "quiz estático shareable"],
+    ["chat", "app com API/chat (server → Vercel)"],
+  ];
+  const st = { step: 0, idea: "", teamIdx: 0, capIdx: 0, dry: false, err: "" };
+
+  process.stdout.write(`${ESC}?1049h${ESC}?25l`);
+  const restore = () => process.stdout.write(`${ESC}?25h${ESC}?1049l`);
+  enableKeys();
+
+  const stepNames = ["ideia", "time", "tipo", "confirmar"];
+
+  function render() {
+    const cols = Math.max(64, Math.min(process.stdout.columns || 100, 100));
+    const W = cols - 2;
+    const out = [];
+    const row = (s) => fg(PURPLE, "│") + padTo(" " + truncTo(s, W - 2), W) + fg(PURPLE, "│");
+    const blank = () => row("");
+    out.push(fg(PURPLE, "┌─ ") + bold(fg(PURPLE, "🎼 MAESTRO · NOVO APP")) + fg(PURPLE, " " + "─".repeat(Math.max(0, W - 25)) + "┐"));
+    out.push(row(stepNames.map((n, i) => (i === st.step ? bold(fg(CYAN, `● ${n}`)) : i < st.step ? fg(GREEN, `✓ ${n}`) : dim(`○ ${n}`))).join(dim("  ─  "))));
+    out.push(blank());
+
+    if (st.step === 0) {
+      out.push(row(bold("Qual é a ideia do app?")));
+      out.push(blank());
+      out.push(row(fg(CYAN, `  ${st.idea}▌`)));
+      out.push(blank());
+      out.push(row(dim("  ex.: quiz de openings de anime · gerador de photocard · fanfic interativa")));
+    } else if (st.step === 1) {
+      out.push(row(bold("Quem toca? (setup de agentes)")));
+      out.push(blank());
+      teams.forEach(([id, t], i) => {
+        const sel = i === st.teamIdx;
+        const disp = Object.entries(t.dispatch || {}).map(([k, v]) => `${k}→${v}`).join("  ");
+        out.push(row(`${sel ? bold(fg(CYAN, "▸ ")) : "  "}${t.emoji || "·"} ${sel ? bold(id) : id}  ${dim(t.label || "")}`));
+        if (sel) out.push(row(dim(`      ${disp}`)));
+      });
+    } else if (st.step === 2) {
+      out.push(row(bold("Que tipo de app?")));
+      out.push(blank());
+      caps.forEach(([id, label], i) => {
+        const sel = i === st.capIdx;
+        out.push(row(`${sel ? bold(fg(CYAN, "▸ ")) : "  "}${sel ? bold(id) : id}  ${dim(label)}`));
+      });
+    } else {
+      const [teamId, team] = teams[st.teamIdx];
+      out.push(row(bold("Partitura pronta:")));
+      out.push(blank());
+      out.push(row(`  ideia   ${fg(CYAN, truncTo(st.idea, W - 14))}`));
+      out.push(row(`  time    ${team.emoji || "·"} ${fg(CYAN, teamId)} ${dim(team.label || "")}`));
+      out.push(row(`  tipo    ${fg(CYAN, caps[st.capIdx][0])}`));
+      out.push(row(`  dry-run ${st.dry ? fg(YELLOW, "SIM (não gasta limite)") : dim("não")}   ${dim("← tecla [d] alterna")}`));
+      out.push(blank());
+      out.push(row(bold(fg(GREEN, "  Enter = começar o arco ▶"))));
+    }
+
+    out.push(blank());
+    if (st.err) out.push(row(fg(RED, st.err)));
+    const hints =
+      st.step === 0
+        ? "Enter continua · Esc sai"
+        : st.step === 3
+          ? "Enter inicia · d dry-run · ← volta · Esc sai"
+          : "↑↓ escolhe · Enter continua · ← volta · Esc sai";
+    out.push(fg(PURPLE, "└─ ") + dim(hints) + fg(PURPLE, " " + "─".repeat(Math.max(0, W - visibleLen(hints) - 5)) + "┘"));
+
+    let frame = `${ESC}H`;
+    for (const line of out) frame += line + `${ESC}K\n`;
+    frame += `${ESC}J`;
+    process.stdout.write(frame);
+  }
+
+  const payload = await new Promise((resolve) => {
+    const onKey = (str, key) => {
+      st.err = "";
+      if ((key.ctrl && key.name === "c") || key.name === "escape") return finish(null);
+      if (st.step === 0) {
+        if (key.name === "return") {
+          if (st.idea.trim().length >= 6) st.step = 1;
+          else st.err = "escreve a ideia (mínimo 6 caracteres)";
+        } else if (key.name === "backspace") st.idea = st.idea.slice(0, -1);
+        else if (str && !key.ctrl && str >= " " && st.idea.length < 200) st.idea += str;
+      } else if (st.step === 1) {
+        if (key.name === "up") st.teamIdx = (st.teamIdx + teams.length - 1) % teams.length;
+        else if (key.name === "down") st.teamIdx = (st.teamIdx + 1) % teams.length;
+        else if (key.name === "return") st.step = 2;
+        else if (key.name === "left") st.step = 0;
+      } else if (st.step === 2) {
+        if (key.name === "up") st.capIdx = (st.capIdx + caps.length - 1) % caps.length;
+        else if (key.name === "down") st.capIdx = (st.capIdx + 1) % caps.length;
+        else if (key.name === "return") st.step = 3;
+        else if (key.name === "left") st.step = 1;
+      } else {
+        if (key.name === "return")
+          return finish({ idea: st.idea.trim(), team: teams[st.teamIdx][0], capability: caps[st.capIdx][0], dryRun: st.dry });
+        if (key.name === "left") st.step = 2;
+        if (str === "d") st.dry = !st.dry;
+      }
+      render();
+    };
+    const finish = (v) => {
+      process.stdin.removeListener("keypress", onKey);
+      resolve(v);
+    };
+    process.stdin.on("keypress", onKey);
+    render();
+  });
+
+  restore();
+  if (!payload) {
+    console.log(dim("setup cancelado"));
+    process.exit(0);
+  }
+  const r = await api("/api/pipeline/start", payload);
+  console.log(fg(GREEN, `✓ pipeline iniciada: ${r.pipeline.appId} · team ${r.pipeline.team}`));
+  await attachTUI();
+}
+
 // ---------- comandos ----------
 function printStatus(p) {
   if (!p || !p.appId) {
@@ -367,10 +502,13 @@ async function main() {
   const [cmd, ...args] = process.argv.slice(2);
   const { flags, rest } = parseArgs(args);
 
-  if (!cmd || cmd === "help" || cmd === "--help") {
+  if (!cmd) return wizard(); // sem args = tela de setup (ideia → time → tipo → RUN)
+
+  if (cmd === "help" || cmd === "--help") {
     console.log(`
 ${bold(fg(PURPLE, "🎼 forge"))} — Maestro Autopilot (anime-forge)
 
+  ${bold("forge")}           tela de setup interativa (ideia → time → tipo → RUN)
   ${bold("forge new")} "<ideia>" [--team X] [--app-id X] [--capability static|quiz|chat]
             [--subdomain X] [--target cf-pages|vercel] [--dry-run]
   ${bold("forge attach")}    TUI ao vivo da pipeline
@@ -387,7 +525,7 @@ Teams: grok-solo (default) · grok-glm-front · quality · dry-run
 
   if (cmd === "new") {
     const idea = rest.join(" ").trim();
-    if (!idea) throw new Error('uso: forge new "<ideia>" [--team X]');
+    if (!idea) return wizard();
     await ensureServer();
     const r = await api("/api/pipeline/start", {
       idea,

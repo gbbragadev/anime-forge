@@ -31,9 +31,13 @@ async function fetch_safe(url, opts = {}, retryCount = 0) {
   }
 }
 
+// Token CF com permissão de escrita: CF_GBBRAGADEV_ADM (admin da conta gbbragadev).
+// CLOUDFLARE_API_TOKEN é read-only — fica como fallback de leitura.
+const CF_TOKEN = process.env.CF_GBBRAGADEV_ADM || process.env.CLOUDFLARE_API_TOKEN;
+
 /** Chamadas à API Cloudflare */
 async function cf(pathname, opts = {}) {
-  const token = process.env.CLOUDFLARE_API_TOKEN;
+  const token = CF_TOKEN;
   if (!token) return null;
   const { method = "GET", body, timeout = 30000 } = opts;
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
@@ -131,17 +135,29 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   }
   log(`✓ output ready: ${path.relative(root, outDir)}`);
 
-  // 2. Deploy via wrangler
+  // Account ID antes do wrangler: token multi-conta trava sem ele em modo não-interativo
+  let accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  if (!accountId) {
+    const listRes = await cf("/accounts", {});
+    if (listRes?.ok && listRes.result?.length > 0) accountId = listRes.result[0].id;
+  }
+  const wranglerEnv = {
+    CLOUDFLARE_API_TOKEN: CF_TOKEN,
+    ...(accountId ? { CLOUDFLARE_ACCOUNT_ID: accountId } : {}),
+  };
+
+  // 2. Deploy via wrangler (path relativo sem aspas — cmd.exe /c mastiga aspas em arg)
   log(`▶ wrangler pages deploy → ${appId}`);
-  const deployCmd = `npx --yes wrangler@latest pages deploy "${outDir}" --project-name ${appId} --commit-dirty=true`;
-  const deployRes = run(deployCmd, { CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN }, 5 * 60 * 1000);
+  const deployCmd = `npx --yes wrangler@latest pages deploy apps/${appId}/out --project-name ${appId} --commit-dirty=true`;
+  const deployRes = run(deployCmd, wranglerEnv, 5 * 60 * 1000, root);
 
   if (!deployRes.ok) {
+    const errText = `${deployRes.error || ""} ${deployRes.tail || ""}`;
     // Tenta criar projeto Pages
-    if (/no project|not found/i.test(deployRes.tail)) {
+    if (/no project|not found|does not exist/i.test(errText)) {
       log(`▶ criar projeto Pages ${appId}`);
-      const createCmd = `npx wrangler pages project create ${appId} --production-branch master`;
-      const createRes = run(createCmd, { CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN });
+      const createCmd = `npx --yes wrangler@latest pages project create ${appId} --production-branch master`;
+      const createRes = run(createCmd, wranglerEnv, 5 * 60 * 1000, root);
       if (!createRes.ok) {
         return {
           ok: false,
@@ -154,11 +170,19 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
         };
       }
       // Retry deploy após criar projeto
-      const retryRes = run(deployCmd, { CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN }, 5 * 60 * 1000);
+      const retryRes = run(deployCmd, wranglerEnv, 5 * 60 * 1000, root);
       if (!retryRes.ok) {
-        return { ok: false, error: "wrangler deploy falhou mesmo após criar projeto", fallbackSteps: [] };
+        return {
+          ok: false,
+          error: `wrangler deploy falhou mesmo após criar projeto: ${retryRes.error}`,
+          fallbackSteps: [
+            `1. Rode manualmente: npx wrangler pages deploy apps/${appId}/out --project-name ${appId}`,
+            `2. Dash Pages → custom domain ${deploy.subdomain}.gbbragadev.com`,
+            `3. forge decide <gate> retry`,
+          ],
+        };
       }
-    } else if (/403|unauthorized|authentication error|code:\s*10000|invalid.*token|read.?only/i.test(deployRes.tail)) {
+    } else if (/403|unauthorized|authentication error|code:\s*10000|invalid.*token|read.?only/i.test(errText)) {
       return {
         ok: false,
         error: "CLOUDFLARE_API_TOKEN sem permissão de escrita (read-only)",
@@ -188,15 +212,7 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   {
     log(`▶ custom domain ${customDomain}`);
 
-    // Descobre account ID
-    let accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-    if (!accountId) {
-      const listRes = await cf("/accounts", {});
-      if (listRes?.ok && listRes.result?.length > 0) {
-        accountId = listRes.result[0].id;
-      }
-    }
-
+    // accountId já resolvido no topo (necessário pro wrangler também)
     if (!accountId) {
       log(`✗ sem account ID — via dash: adicione custom domain ${customDomain} no Pages → Settings`);
       return {
@@ -207,7 +223,7 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
     }
 
     // Cria binding domain
-    const domainRes = await cf(`/pages/projects/${appId}/domains`, {
+    const domainRes = await cf(`/accounts/${accountId}/pages/projects/${appId}/domains`, {
       method: "POST",
       body: { name: customDomain },
     });
