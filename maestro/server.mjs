@@ -302,7 +302,7 @@ function startRun(goal, opts = {}) {
   log(`  raw log → maestro/runs/${path.basename(rawLogPath)}`);
   log(`$ ${cmd} … [goal]`);
 
-  const quietUi = executor === "grok"; // Grok TUI is unreadable in web panel
+  const quietUi = false; // grok agora roda via -p (headless real, output limpo) — ver adapters.mjs
 
   try {
     child = spawn(cmd, args, {

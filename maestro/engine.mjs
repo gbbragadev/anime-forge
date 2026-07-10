@@ -58,7 +58,6 @@ const MAX_ATTEMPTS_PER_PLAYER = 3;
 const COOLDOWN_MS = 60 * 60 * 1000;
 const JOB_TIMEOUT_MS = { "L0/P0": 15 * 60 * 1000, "L0/P1": 15 * 60 * 1000, default: 30 * 60 * 1000 };
 const JOB_MAX_TURNS = { "L0/P0": 25, "L0/P1": 25, "L1/B1": 50, "L1/B3": 50, "L1/B4": 40, default: 30 };
-const SILENCE_KILL_MS = 5 * 60 * 1000; // anti-hang Grok: sem output por 5min = considerar terminado
 
 export function createEngine({ root, emitLog, emitPipeline }) {
   const PIPELINE_PATH = path.join(root, "maestro", "pipeline.json");
@@ -246,9 +245,7 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       log(`  raw → ${path.relative(root, rawPath)}`);
 
       let tail = "";
-      const quiet = player.cli === "grok";
       const san = createStreamSanitizer((line) => log(`  ${line}`));
-      let lastOutputAt = Date.now();
 
       let proc;
       try {
@@ -263,12 +260,11 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       child = proc;
 
       const onChunk = (buf) => {
-        lastOutputAt = Date.now();
         try {
           fs.writeSync(rawFd, buf);
         } catch {}
         tail = (tail + String(buf)).slice(-8000);
-        if (!quiet) san.push(buf);
+        san.push(buf);
       };
       proc.stdout?.on("data", onChunk);
       proc.stderr?.on("data", onChunk);
@@ -283,13 +279,8 @@ export function createEngine({ root, emitLog, emitPipeline }) {
           else proc.kill("SIGTERM");
         } catch {}
       };
+      // grok -p sai sozinho ao terminar; o hard timeout é o único anti-hang necessário
       const hardTimer = setTimeout(() => killProc(`timeout ${Math.round(timeoutMs / 60000)}min`), timeoutMs);
-      // ponytail: anti-hang por silêncio só p/ grok (TUI trava pós-término); watchdog geral se outro CLI travar também
-      const silenceTimer = quiet
-        ? setInterval(() => {
-            if (Date.now() - lastOutputAt > SILENCE_KILL_MS) killProc("grok silencioso 5min (anti-hang)");
-          }, 30 * 1000)
-        : null;
 
       const heartbeat = setInterval(() => {
         const sec = Math.round((Date.now() - startAt) / 1000);
@@ -299,9 +290,8 @@ export function createEngine({ root, emitLog, emitPipeline }) {
 
       proc.on("close", (code) => {
         clearTimeout(hardTimer);
-        if (silenceTimer) clearInterval(silenceTimer);
         clearInterval(heartbeat);
-        if (!quiet) san.flush();
+        san.flush();
         try {
           fs.closeSync(rawFd);
         } catch {}

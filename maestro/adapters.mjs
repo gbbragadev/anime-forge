@@ -205,10 +205,14 @@ export function buildSpawn(cli, goal, opts) {
     };
   }
 
-  // default: grok (Grok Build CLI headless — SuperGrok subscription)
+  // default: grok (Grok Build CLI — SuperGrok subscription).
+  // -p/--single = headless real: roda o loop agêntico, imprime resumo limpo e SAI.
+  // (goal posicional abre a TUI interativa — era a causa do hang + ANSI soup)
   return {
     cmd: resolveBin("grok"),
     args: [
+      "-p",
+      goal,
       "--cwd",
       root,
       "--always-approve",
@@ -216,11 +220,7 @@ export function buildSpawn(cli, goal, opts) {
       "bypassPermissions",
       "--max-turns",
       String(maxTurns),
-      "--output-format",
-      "json",
-      "--no-alt-screen",
       "--check",
-      goal,
     ],
     env: base,
   };
