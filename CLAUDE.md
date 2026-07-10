@@ -25,16 +25,18 @@ Sempre:
 ## Loops (resumo)
 
 - **L0** product: score → content → build → ship → measure → kill|scale  
-- **L1** build: claim → implement → verify → fix  
+- **L1** build: claim → implement|**prompt GLM (B3)** → verify → fix  
 - **L2** handoff: rate-limit → outro agente via HANDOFF  
 
-Full: `docs/AGENT-PIPELINE.md`
+Full: `docs/AGENT-PIPELINE.md` · B3 template: `docs/prompts/L1-B3-TEMPLATE.md`
 
 ## Commands
 
 ```bash
 cd C:\Dev\anime-forge
 npm install
-npm run dev
+npm run dev        # waifu-chat
+npm run dev:quiz   # anime-quiz
 npm run build
+npm run build:quiz
 ```
