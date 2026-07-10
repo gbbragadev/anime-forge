@@ -1,6 +1,6 @@
 # Agent Pipeline — loops multi-provedor
 
-Um **processo em loops**, vários motores (**Codex / Claude / Grok / Gemini**).  
+Um **processo em loops**, vários motores (**Codex / Claude / Grok / Gemini / GLM**).  
 Estágios são **passos dentro** dos loops — não uma fila linear cega.
 
 ```
@@ -15,6 +15,7 @@ Estágios são **passos dentro** dos loops — não uma fila linear cega.
 │  L1  BUILD LOOP  (código — até DoD ou bloqueio)             │
 │  claim → implement → build/smoke → fix → update handoff     │
 │         └──────── repete até verde ───────────────────────┘ │
+│  B1 lógica → B3 visual (GLM prompt denso) → B5 ship        │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
@@ -30,200 +31,204 @@ Estágios são **passos dentro** dos loops — não uma fila linear cega.
 ```
 Repo: C:\Dev\anime-forge
 Leia AGENTS.md + workbench/HANDOFF.md + workbench/QUEUE.md.
-Identifique o loop (L0/L1/L2) e a iteração atual.
-Claime slot em CLAIMS.md e rode UMA iteração do loop ativo
-(ou o job da QUEUE). Ao terminar: HANDOFF + QUEUE + liberar claim.
-Não pule para o próximo app sem fechar o measure/kill do atual.
-IMPORTANTE: coding agent = só subscription (Claude/Codex/Grok/Gemini).
-Produto: ler OPEN_ROUTER_API_KEY da env do sistema (não pedir no chat).
-Nunca ANTHROPIC/OPENAI/GEMINI_API_KEY pay-as-you-go como motor do agent.
+Identifique o loop (L0/L1/L2) e rode UMA iteração do job livre.
+Claime em CLAIMS.md. Ao terminar: HANDOFF + QUEUE + liberar claim.
+Coding agent = só subscription. Keys de produto: ler env, nunca pedir no chat.
 ```
 
-### Keys do produto (tabela canônica)
+### Atalhos de sessão
+
+| User diz | Agente faz |
+|----------|------------|
+| `segue` / `próximo job` | 1 job da QUEUE (ou HANDOFF Next) |
+| `pode decidir e seguir` | Decide GO/NO-GO e **executa** o próximo step lógico (ex.: scaffold após P0+P1) sem re-perguntar |
+| `siga até decisão minha` | Encadeia jobs **só** enquanto não precisar de: measure humano, key nova, billing, domínio, ou produto ambíguo |
+| UI feia / apelo visual | **Não codar UI** → gerar prompt denso em `workbench/prompts-glm/` (GLM 5.2 MAX) |
+| commit / push / deploy liberado | Fazer até o ship path documentado; se faltar token, fallback + HANDOFF |
+
+---
+
+## Lições de produção (2026-07 · waifu-chat + anime-quiz)
+
+| Lição | Implicação no loop |
+|-------|-------------------|
+| B1 YAGNI = “funciona, texto seco” (~4/10 visual) | **Esperado.** Não polish no B1. Enfileirar **B3** com prompt denso. |
+| Prompt GLM vago → UI meh; prompt denso → ~7.5/10 | B3 = **brief de design** (checklist `workbench/prompts-glm/README.md`) |
+| GLM constrói bem; direção fraca se brief ralo | Quem gera o prompt (Grok/Codex) é dono da qualidade visual |
+| Content-first (P0→P1) reduz scaffold inútil | **Proibido B1** sem P0 GO (e preferir P1 hooks antes) |
+| Porta :3001 Docker devolve “Running” | Preferir :3000 ou portas livres; smoke real = curl HTML, não só “process up” |
+| Vercel sem login / CF token sem Pages | Ship matrix: static → **GitHub Pages**; server → Vercel com token |
+| `output: "export"` só se app sem API no free path | Quiz static OK; chat precisa Node |
+| 1 sessão ≠ app inteiro | P0→P1→B1→B3→B5 em **várias** iterações (exceto “siga até decisão” com gates claros) |
+
+Detalhe visual/prompts: `workbench/prompts-glm/README.md`.
+
+---
+
+## Keys do produto (tabela canônica)
 
 | Key | Agent faz o quê? | Para quê |
 |-----|------------------|----------|
-| `OPEN_ROUTER_API_KEY` | **Lê da env do sistema — não pede** | App — padrão smoke |
-| `OPENROUTER_API_KEY` | Lê se existir — não pede | App — fallback `.env.local` |
-| `OPENROUTER_MODEL` | Lê se existir | Modelo do chat |
-| `ANTHROPIC_API_KEY` | **Não** | Coding agent |
-| `OPENAI_API_KEY` | **Não** | Coding agent |
-| `GEMINI_API_KEY` (pay-as-you-go) | **Não** | Coding agent — use sub Google / Gemini app |
+| `ZAI_API_KEY` / `GLM_API_KEY` | Lê se `PRODUCT_AI_PROVIDER=zai` | App chat (default atual) |
+| `OPEN_ROUTER_API_KEY` | Lê env sistema se openrouter | App — smoke |
+| `OPENROUTER_API_KEY` | Lê se existir | Fallback `.env.local` |
+| `OPENROUTER_MODEL` / `ZAI_MODEL` | Lê se existir | Modelo |
+| `ANTHROPIC_*` / `OPENAI_*` / `GEMINI_API_KEY` paygo | **Não** | Coding agent |
 
-Guia visual: `docs/GUIA-VISUAL.html` · shim Gemini: `GEMINI.md`
+Smoke chat: `GET /api/health`. Quiz estático: **sem** key.
 
----
-
-## Bernstein (opcional — progresso L1)
-
-Orquestra **CLI coding agents** (Claude Code, Codex, Gemini CLI…) em worktrees, com TUI `bernstein live` e audit.
-
-| Use | Não use |
-|-----|---------|
-| Jobs L1 code-heavy (B1/B3/B4) | L0 copy/Grok-only |
-| Ver progresso de run paralela | Substituir HANDOFF multi-sub |
-| Gate `npm run build` | API pay-as-you-go como motor |
-
-```powershell
-cd C:\Dev\anime-forge
-bernstein doctor
-bernstein live    # monitor
-bernstein         # goal em bernstein.yaml
-```
-
-Piloto: `docs/BERNSTEIN-PILOT.md`
+Guia: `docs/GUIA-VISUAL.html` · Gemini sub: `GEMINI.md`
 
 ---
 
-## Tools avaliados (mapa)
+## L0 — Product Loop
 
-| Tool | Serve para | Na factory |
-|------|------------|------------|
-| Workbench L0/L1/L2 | Handoff multi-sub | **Base** |
-| Bernstein | Progresso + multi-CLI coding | **Piloto L1** |
-| ccswarm | Claude/Codex queue/tail | Alt a Bernstein |
-| Langflow | Flows LLM de produto | Não core |
-| CLI-Anything | GIMP/Comfy agent-native | Image futuro |
-| MALLM (Multi-Agent-LLMs) | Debate multi-LLM research | Não |
-| karpathy/autoresearch | Loop treino LLM | Não |
-| karpathy/llm-council | Council via OpenRouter | P0 opcional só |
-| karpathy-guidelines skill | Qualidade de código | Já global |
+Uma volta = uma aposta de app. **Não** abra L0 novo com L1 vermelho no app atual.
+
+| Step | Nome | Output | Agente |
+|------|------|--------|--------|
+| P0 | Scorecard | GO/NO-GO + arquivo `docs/scorecard-<id>.md` | Grok/Gemini |
+| P1 | Content hooks | `docs/content-hooks-<id>.md` (15 PT-BR) | Grok/Gemini |
+| P2 | Enter L1 | B1…B5 | Codex/Grok/Claude/GLM |
+| P3 | Ship | URL pública | Grok/Codex + CI |
+| P4 | Measure | 5–7d bio/CTR | **Humano** (+ Grok resume) |
+| P5 | Kill/Scale | matar ou novos jobs L1 | Grok + user |
+
+```
+P0 ──go──► P1 ──(sinal ou “pode decidir”)──► P2 (L1) ──► P3 ship ──► P4 ──► P5
+ │ no-go      sem sinal / wait human                         │
+ └─ fim       └─ NÃO scaffold                                 ├─ kill → novo P0
+                                                              └─ scale → B3/B2/image na QUEUE
+```
+
+### Gates L0 (não pular)
+
+1. **P0 GO** obrigatório antes de B1  
+2. **P1 hooks** obrigatório antes de declarar “content-ready”; B1 com só P0 exige user **“pode decidir e seguir”**  
+3. **P3 URL** antes de P4 measure sério  
+4. Capability nova (`image`) sem score → **só conteúdo**, sem L1  
+
+Prompts: `docs/prompts/L0-*.md`.
 
 ---
 
-## L0 — Product Loop (negócio + fábrica)
+## L1 — Build Loop
 
-Uma volta = uma aposta de app. **Não** abra L0 novo com L0 anterior sem measure.
-
-| Step | Nome | Output | Tokens | Agente default |
-|------|------|--------|--------|----------------|
-| P0 | Scorecard | go / no-go | baixo | Grok **ou Gemini** |
-| P1 | Content test | 15–30 pieces / sinal de demanda | baixo | humano + Grok/Gemini hooks |
-| P2 | Enter L1 | app no ar mínimo | — | Codex claim |
-| P3 | Ship | URL + paywall mock/real | baixo | qualquer sub |
-| P4 | Measure | 5–7 dias: cliques bio, custo API, conversão | baixo | humano / Grok ou Gemini |
-| P5 | Kill or Scale | matar **ou** enfileirar polish/image/billing | baixo | Grok/Gemini + você |
+Uma sessão = **1 job** (salvo “siga até decisão” com lista de jobs não-ambíguos).
 
 ```
-P0 ──go──► P1 ──sinal──► P2 (L1) ──► P3 ──► P4 ──► P5
- │ no-go      sem sinal              │              │
- └─ fim       └─ fim / outra ideia   │              ├─ kill → novo P0
-                                     │              └─ scale → novo L1 jobs
-                                     └─ build falha → L1 itera
+CLAIM → IMPLEMENT|PROMPT → VERIFY → FIX* → HANDOFF
 ```
 
-Prompts: `docs/prompts/L0-*.md` e atalhos S0/S5/S6 mapeados abaixo.
+### Jobs e qualidade esperada
 
-Detalhe de monetização/conteúdo: `docs/PLAYBOOK.md`.
+| Job | O que entrega | O que **não** entrega | Preferência |
+|-----|---------------|----------------------|-------------|
+| **B1 Scaffold** | App roda, fluxo core, build verde | Beleza anime / share card final | Codex/Grok |
+| **B2 Personas** | Pack JSON originais | UI | Grok/Gemini |
+| **B3 UI** | Apelo visual shareable | Lógica nova / API | **GLM via prompt denso** |
+| **B4 Wire API** | chat/credits/health | Redesign | Codex |
+| **B5 Ship check** | Checklist PASS/N-A + Next P3/P4 | Features novas | qualquer |
+| **P3 Deploy** | URL (Pages/Vercel) | Measure | Grok + CI |
+
+### Split B1 / B3 (crítico)
+
+```
+B1  = “dá pra usar”     → texto seco OK
+B3  = “dá pra printar”  → prompt GLM denso obrigatório se frontend forte
+```
+
+Agente em B3:
+1. **Não** implementar UI pesada  
+2. Escrever `workbench/prompts-glm/L1-B3-<app>-<tema>.md` com checklist completo  
+3. QUEUE: “prompt GLM pronto”  
+4. User cola no GLM → GLM fecha claim + build  
+5. Grok/Codex pode só **VERIFY** pós-GLM se pedido  
+
+Template: `docs/prompts/L1-B3-TEMPLATE.md` · exemplos em `workbench/prompts-glm/`.
+
+### VERIFY por tipo de app
+
+| Tipo | Comando | Smoke extra |
+|------|---------|-------------|
+| Chat (waifu) | `npm run build` | `GET /api/health`; 1 stream se key ok |
+| Quiz estático | `npm run build:quiz` | curl HTML contém título app; **sem** health key |
+| Qualquer | port livre | se :3001 = Docker “Running”, mudar porta |
+
+Máx 3 fix no mesmo erro → BLOCK + L2.
 
 ---
 
-## L1 — Build Loop (código)
+## P3 — Ship matrix
 
-Roda **dentro** de P2 (e de novo se scale pedir feature).  
-Uma sessão de agente = **1 iteração** de L1 (não 10 features).
+| App free path | Host preferido | Notas |
+|---------------|----------------|-------|
+| Static (`output: "export"`) | **GitHub Pages** (workflow no repo) | `PAGES_BASE_PATH=/<repo>` no CI |
+| Server (API routes) | **Vercel** | precisa `vercel login` ou `VERCEL_TOKEN` |
+| CF Pages | se token com **Pages write** | token “whoami only” não basta |
 
-```
-        ┌──────────────┐
-        │ 1. CLAIM job │ ← QUEUE + CLAIMS
-        └──────┬───────┘
-               ▼
-        ┌──────────────┐
-        │ 2. IMPLEMENT │ ← só arquivos do job
-        └──────┬───────┘
-               ▼
-        ┌──────────────┐
-        │ 3. VERIFY    │ ← npm run build (+ smoke manual se API)
-        └──────┬───────┘
-               │
-        fail ──┤── pass
-               ▼         ▼
-        ┌──────────┐  ┌─────────────┐
-        │ 4a. FIX  │  │ 4b. HANDOFF │
-        │  (loop)  │  │  + QUEUE    │
-        └────┬─────┘  └─────────────┘
-             │
-             └── voltar ao VERIFY (máx ~3 tentativas; senão BLOCK no HANDOFF)
-```
+Checklist ship:
+- [ ] B5 PASS (ou N/A documentados)
+- [ ] Push `master` (autorizado)
+- [ ] Workflow verde **ou** deploy CLI OK
+- [ ] URL no HANDOFF + hooks CTA apontam pra URL
+- [ ] Secrets fora do git
 
-### Jobs de build (antigos S1–S4, S6)
-
-| Job ID | Dentro de L1 | Preferência |
-|--------|--------------|-------------|
-| B1 Scaffold | copiar app + app.config | Codex (Gemini se for o que tem cota) |
-| B2 Personas | content/personas | Grok **ou Gemini** |
-| B3 UI polish | packages/ui ou app CSS | Claude (Gemini backup) |
-| B4 Wire API | routes + credits + env | Codex |
-| B5 Ship check | build + checklist | qualquer sub |
-
-Prompts: `docs/prompts/L1-*.md`.
-
-**Regra:** se VERIFY falhar 3× no mesmo erro → parar, escrever blocker no HANDOFF, **L2** (outro agente) ou você.
+Exemplo live: `https://gbbragadev.github.io/anime-forge/` (AnimeQuiz).
 
 ---
 
-## L2 — Agent Handoff Loop (limites)
-
-Não é feature. É **continuação**.
+## L2 — Agent Handoff
 
 ```
-agente A trabalha ──► rate limit / contexto sujo / sessão longa
-         │
-         ▼
-   atualiza HANDOFF (obrigatório: Next + Blockers + Files)
-         │
-         ▼
-   libera ou marca claim "paused"
-         │
-         ▼
-   agente B (outro provedor) lê HANDOFF + QUEUE
-         │
-         ▼
-   retoma MESMO job / MESMA iteração L1
+rate-limit / contexto sujo → HANDOFF (Next + Blockers + Files)
+  → claim paused-L2 → outro provedor → MESMO job
 ```
 
-| Situação | Próximo motor |
-|----------|----------------|
-| Claude limit | Codex (B1/B4) ou Grok/Gemini (B2 + L0) |
-| Codex limit | Grok/Gemini (P0/B2/hooks) ou Claude (B3) |
-| Grok limit | Gemini (L0/B2) ou Codex/Claude no L1 |
-| Gemini limit | Grok (L0) ou Codex/Claude (L1) |
-| Chat confuso | **Novo** chat + HANDOFF (não empilhar) |
-| Tokens sobrando no provedor X | Enfileirar jobs baratos B2 + hooks e descarregar |
+| Situação | Próximo |
+|----------|---------|
+| Claude limit | Codex B1/B4 · Grok L0 · GLM B3 |
+| Codex limit | Grok L0/B2 · Claude/GLM B3 |
+| Grok limit | Gemini L0 · Codex L1 |
+| UI job na fila | Gerar/atualizar prompt GLM; user executa GLM |
 
 ---
 
-## Mapa antigo S0–S6 → loops
+## Mapa S0–S6 → loops
 
 | Antes | Agora |
 |-------|--------|
-| S0 | L0 / P0 |
-| S1 | L1 / B1 |
-| S2 | L1 / B2 |
-| S3 | L1 / B3 |
-| S4 | L1 / B4 |
-| S5 | L0 / P1 (hooks) |
-| S6 | L1 / B5 |
-
-Prompts legados `docs/prompts/0N-*.md` apontam para os L*.
+| S0 | L0/P0 |
+| S1 | L1/B1 |
+| S2 | L1/B2 |
+| S3 | L1/B3 |
+| S4 | L1/B4 |
+| S5 | L0/P1 |
+| S6 | L1/B5 |
 
 ---
 
-## Anti-colisão (com loops)
+## Anti-colisão
 
-1. Um claim = uma iteração L1 ou um step L0  
+1. Um claim = uma iteração  
 2. Dois agents: apps diferentes **ou** `content/` vs `packages/`  
 3. Kernel (`packages/*`): claim exclusivo  
-4. Não abrir L0 de app B no meio de L1 vermelho do app A  
+4. Não L0 de app B com L1 vermelho em A  
+5. Frontend forte ≠ coding agent default (usa GLM prompt)
 
 ## Skill
 
-`.agents/skills/ship-niche-app/SKILL.md` — detecta loop ativo, roda **uma** iteração, atualiza workbench.
+`.agents/skills/ship-niche-app/SKILL.md`
 
 ## workbench
 
-| Arquivo | Papel no loop |
-|---------|----------------|
-| `QUEUE.md` | jobs; marca loop (L0/L1) + job id |
-| `HANDOFF.md` | estado da **iteração** (não essay) |
-| `CLAIMS.md` | quem está em qual loop agora |
+| Arquivo | Papel |
+|---------|--------|
+| `QUEUE.md` | Backlog / Doing / Done + loop/job |
+| `HANDOFF.md` | Last agent, Next, Blockers, **URL ship**, Lessons |
+| `CLAIMS.md` | slot ativo |
+| `prompts-glm/` | briefs B3 densos |
+
+## Bernstein (opcional L1)
+
+`docs/BERNSTEIN-PILOT.md` — progresso multi-CLI; **não** substitui workbench L0/L2.

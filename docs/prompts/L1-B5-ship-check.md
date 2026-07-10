@@ -3,18 +3,33 @@
 ```
 Repo: C:\Dev\anime-forge
 Loop: L1 · Job: B5 Ship check
+App: <<< waifu-chat | anime-quiz | … >>>
 Claim curto.
 
-Checklist:
-- [ ] npm run build
-- [ ] .env.example documenta vars
-- [ ] free quota bloqueia (402 ou paywall) quando remaining=0
-- [ ] disclaimer legal na UI
-- [ ] HANDOFF Next claro para L0/P1 ou P4
+Checklist (marque PASS / FAIL / N-A com razão):
 
-Corrija só quebras de checklist (ponytail).
-Smoke de key: GET /api/health — lê OPEN_ROUTER_API_KEY da env do sistema (**não pedir no chat**).
-Se health.ok=false: HANDOFF com “setar OPEN_ROUTER_API_KEY no Windows”, sem solicitar o valor.
-Reporte PASS/FAIL por item.
+Build
+- [ ] npm run build  (chat)  OU  npm run build:quiz  (static)
+- [ ] Typecheck implícito no next build
+
+Produto / legal
+- [ ] disclaimer legal na UI
+- [ ] .env.example documenta vars relevantes
+- [ ] free quota 402/paywall se app TEM créditos; senão N-A (quiz estático)
+
+API (só se capability chat)
+- [ ] GET /api/health — key lida da env (NÃO pedir no chat)
+- [ ] 1 msg stream se health.ok; senão HANDOFF “setar key no Windows”
+
+Static / quiz
+- [ ] score/fluxo core smoke (JSON válido + winner coerente se aplicável)
+- [ ] N-A health/key se free path sem AI
+
+Ship readiness
+- [ ] HANDOFF Next: P3 deploy path OU P4 measure se já tem URL
+- [ ] Porta dev documentada (evitar confusão Docker :3001)
+
+Corrija só quebras reais (ponytail).
+Reporte tabela PASS/FAIL/N-A.
 Fim: HANDOFF + QUEUE + claim.
 ```

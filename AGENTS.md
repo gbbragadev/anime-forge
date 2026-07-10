@@ -1,139 +1,140 @@
 # Anime Forge — AGENTS.md
 
-> Contrato **único** para Codex, Claude Code, Grok, **Gemini** e qualquer outro agente.
+> Contrato **único** para Codex, Claude Code, Grok, **Gemini**, GLM e qualquer agente.  
 > O processo é em **loops**. O modelo é só o motor de uma iteração.
 >
-> **Subscription only (agentes):** Claude Code / Codex / Grok / **Gemini** na **sub**
-> (app Google / Gemini CLI / AI Pro — não `GEMINI_API_KEY` pay-as-you-go como motor do agent).
+> **Subscription only (agentes):** Claude / Codex / Grok / Gemini na **sub**  
+> (não usar `ANTHROPIC_*` / `OPENAI_*` / `GEMINI_API_KEY` paygo como motor do agent).
 >
-> | Key | Agent faz o quê? | Para quê |
-> |-----|------------------|----------|
-> | `OPEN_ROUTER_API_KEY` | **Lê direto da env do sistema** — **não pedir** | Produto — padrão smoke |
-> | `OPENROUTER_API_KEY` | Lê se existir (.env.local) — **não pedir** | Fallback produto |
-> | `OPENROUTER_MODEL` | Lê se existir | Modelo do app |
-> | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | **Não pedir / não usar** | Coding agent |
->
-> Resolução no código: `OPEN_ROUTER_API_KEY` → `OPENROUTER_API_KEY`. Smoke via `/api/health`.
-> Se faltar as duas: reportar no HANDOFF (user configura no Windows) — **não** ficar pedindo a key no chat.
-> Guia: `docs/GUIA-VISUAL.html`.
+> Detalhe dos loops: `docs/AGENT-PIPELINE.md` · Skill: `.agents/skills/ship-niche-app/SKILL.md`
 
 ## Loops (leia isto primeiro)
 
 ```
-L0 PRODUCT  → score → content → build → ship → measure → kill|scale
-L1 BUILD    → claim → implement → verify → fix* → handoff
-L2 HANDOFF  → limite/contexto → HANDOFF.md → outro agente → mesmo job
+L0 PRODUCT  → P0 score → P1 content → P2 L1 build → P3 ship → P4 measure → P5 kill|scale
+L1 BUILD    → claim → implement|prompt → verify → fix* → handoff
+L2 HANDOFF  → limite → HANDOFF.md → outro agente → mesmo job
 ```
 
-- Uma sessão = **uma iteração** (não “faz o app inteiro”).
-- Detalhe: `docs/AGENT-PIPELINE.md`
-- Skill: `.agents/skills/ship-niche-app/SKILL.md`
+| Atalho do user | Comportamento |
+|----------------|---------------|
+| `segue` | 1 job livre da QUEUE |
+| `pode decidir e seguir` | Decide + executa próximo step lógico |
+| `siga até decisão minha` | Encadeia até gate humano (measure, key, billing, domínio) |
+| UI / apelo visual | Prompt denso GLM — **não** implementar UI forte aqui |
+
+- Uma sessão default = **uma** iteração (exceto “siga até decisão” com gates).
+- QUEUE vazia sem pedido → **perguntar**, não inventar app.
 
 ## Antes de editar
 
-1. `workbench/HANDOFF.md` + `workbench/QUEUE.md`
-2. Claim em `workbench/CLAIMS.md` (agent + **loop** + job + app)
+1. `workbench/HANDOFF.md` + `QUEUE.md`
+2. Claim em `CLAIMS.md` (agent + **loop** + job + app)
 3. Só o job claimado
 4. Fim: HANDOFF + QUEUE + liberar claim
 
-QUEUE vazia e sem pedido explícito → **perguntar**, não inventar app.
-
 ## O que é o repo
 
-Factory: **Tema + IA (OpenRouter) + Frontend + monetização**.
-
-- Vertical: **anime**
-- Exemplo: `apps/waifu-chat`
-- Kernel: `packages/*` + `content/personas`
-- **Não** acoplar Clipia / Senior / SaaS cliente
+Factory: **Tema + IA + Frontend + monetização** · vertical **anime**.
 
 ```
-apps/  packages/  content/personas/
-docs/PLAYBOOK.md          negócio (L0)
-docs/AGENT-PIPELINE.md    loops multi-agente
-docs/prompts/             prompts por step do loop
-workbench/                estado das iterações
-.agents/skills/           ship-niche-app
+apps/waifu-chat      chat IA
+apps/anime-quiz      quiz estático (Pages)
+packages/*           kernel (config, ai, credits, ui)
+content/personas|quizzes
+docs/AGENT-PIPELINE.md   loops + lições + ship matrix
+docs/PLAYBOOK.md         L0 negócio
+docs/prompts/            1 arquivo = 1 job
+workbench/               QUEUE · HANDOFF · CLAIMS · prompts-glm/
 ```
 
-## App = manifesto (dentro de L1/B1)
+**Não** acoplar Clipia / Senior / SaaS cliente.
 
-1. `apps/<id>/` (clone waifu-chat)
+## App = manifesto (L1/B1)
+
+1. `apps/<id>/` (clone chat ou quiz conforme capability)
 2. `defineApp` em `app.config.ts`
-3. Personas em `content/personas/`
-4. Theme mínimo — não redesenhar o design system
+3. Content em `content/`
+4. Theme mínimo no B1 — **B3** = apelo visual (GLM)
 
-**Começar app novo com 1 prompt:** `docs/prompts/NOVO-APP.md` (também no guia visual §★).
+Capability: `chat` · `quiz` · image só com job explícito.
 
-Capability pronta: `chat`. Image/haifu = só com job explícito.
+Novo app 1 prompt: `docs/prompts/NOVO-APP.md` (ainda exige P0 na prática).
 
 ## Comandos
 
 ```bash
 cd C:\Dev\anime-forge
 npm install
-npm run dev      # :3000
-npm run build    # VERIFY obrigatório após código
+npm run dev          # waifu-chat :3000
+npm run dev:quiz     # anime-quiz :3000 (um por vez)
+npm run build
+npm run build:quiz
 ```
 
-Env do **produto** (cérebro do app — não é coding agent):
+⚠️ Se a página mostrar só `Running`, a porta é **Docker**, não o Next. Troque a porta.
 
-**Provider default: Z.AI / GLM** (`PRODUCT_AI_PROVIDER=zai`)
+## Env produto (não coding agent)
 
 | Var | Uso |
 |-----|-----|
-| `ZAI_API_KEY` (ou `GLM_API_KEY`) | Key Z.AI — `.env.local` ou env sistema; **não pedir no chat** |
-| `ZAI_MODEL` | default `glm-4.5-flash` (free); qualidade `glm-5.2` |
-| `OPEN_ROUTER_API_KEY` | só se `PRODUCT_AI_PROVIDER=openrouter` |
+| `ZAI_API_KEY` / `GLM_API_KEY` | Z.AI se `PRODUCT_AI_PROVIDER=zai` |
+| `OPEN_ROUTER_API_KEY` | OpenRouter (env sistema; **não pedir**) |
+| `OPENROUTER_API_KEY` | fallback `.env.local` |
+| `ZAI_MODEL` / `OPENROUTER_MODEL` | modelo |
 
-- Base URL Z.AI: `https://api.z.ai/api/paas/v4/` (OpenAI-compatible)
-- Docs: https://docs.z.ai/guides/overview/quick-start
-- Smoke: `GET /api/health`
-- Nunca commitar keys; nunca usar keys de coding agent (Anthropic/OpenAI sub)
+- Smoke chat: `GET /api/health`
+- Quiz free path: **sem** key
+- Nunca commitar secrets
 
-## Jobs ↔ loops
+## Jobs ↔ quem roda
 
-| Job | Loop | Preferência |
-|-----|------|-------------|
-| P0 Scorecard | L0 | Grok **ou Gemini** |
-| P1 Content hooks | L0 | Grok **ou Gemini** |
-| B1 Scaffold | L1 | Codex |
-| B2 Personas | L1 | Grok **ou Gemini** |
-| B3 UI polish | L1 | Claude (ou Gemini se Claude limitou) |
-| B4 Wire API | L1 | Codex |
-| B5 Ship check | L1 | qualquer sub |
-| Handoff | L2 | qualquer outro provedor (Claude/Codex/Grok/**Gemini**) |
+| Job | Loop | Preferência | Nota de qualidade |
+|-----|------|-------------|-------------------|
+| P0 Scorecard | L0 | Grok/Gemini | salvar `docs/scorecard-*.md` |
+| P1 Content hooks | L0 | Grok/Gemini | 15 hooks + CTA URL |
+| B1 Scaffold | L1 | Codex/Grok | funcional; visual seco OK |
+| B2 Personas | L1 | Grok/Gemini | originais/arquétipos |
+| B3 UI polish | L1 | **GLM 5.2 MAX** | via prompt denso `workbench/prompts-glm/` |
+| B4 Wire API | L1 | Codex | health + stream |
+| B5 Ship check | L1 | qualquer | PASS/FAIL/**N-A** |
+| P3 Deploy | L0/L1 | CI / Grok | static→GH Pages; server→Vercel |
+| Handoff | L2 | outro provedor | mesmo job |
 
 ## Regras
 
-- YAGNI / ponytail — mínimo que fecha a iteração
-- Coding style: **karpathy-guidelines** (think before coding, simplicity, surgical, goal-driven) se a skill estiver no ambiente
-- VERIFY falhou → fix no L1; 3 fails → BLOCK no HANDOFF (L2 ou humano)
-- Rate limit → L2: não recomeçar o produto
-- Personas originais/arquétipos; sem secrets no git; sem push sem autorização
+- YAGNI / ponytail no **B1**; apelo visual no **B3** (não misturar)
+- **Frontend forte:** não implementar — gerar prompt com `docs/prompts/L1-B3-TEMPLATE.md`
+- **Prompts GLM = brief de design** (lição: ~4/10 → ~7.5/10). Checklist: `workbench/prompts-glm/README.md`
+- karpathy-guidelines se disponível (simplicidade, surgical, goal-driven)
+- VERIFY falhou → fix ≤3 → senão BLOCK + L2
+- Rate limit → L2, não recomeçar produto
+- Personas originais; sem IP; sem push/deploy sem autorização (user pode liberar na sessão)
 - pt-BR se o user escreveu em pt-BR
+- P0 GO antes de B1; B1 sem P1 só com “pode decidir e seguir”
 
-## Bernstein (opcional — L1 code-heavy)
+## Ship (P3)
 
-- Orquestra CLI agents (Claude Code / Codex; Gemini CLI se instalado) com progresso (`bernstein live`)
-- Config: `bernstein.yaml` · piloto: `docs/BERNSTEIN-PILOT.md`
-- **Não** substitui workbench para L0 / Grok / L2 handoff humano
-- Gate preferido: `npm run build` (não pytest Python)
-- Antes de run grande: `bernstein doctor`
+| Free path | Preferência |
+|-----------|-------------|
+| Static export | GitHub Pages (`.github/workflows/…`) |
+| API routes | Vercel (`VERCEL_TOKEN` ou login) |
 
-## Tools avaliados e NÃO no core
-
-CLI-Anything (software GUI) · Langflow (flows produto) · MALLM/Multi-Agent-LLMs (debate research) · karpathy/autoresearch · karpathy/llm-council · forks karpathy-skills (já coberto por skill global)
-- **Frontend forte (UI polish, share card, motion, redesign visual):** o agente **não implementa** — gera **prompt elaborado** em `workbench/prompts-glm/` para o user colar no **GLM 5.2 MAX**. Ainda atualiza HANDOFF/QUEUE (job “prompted” ou Done quando user confirmar). Jobs leves de wire/API/content o agente implementa normal.
-- **Prompts GLM = brief de design, não one-liner** (lição 2026-07-10, anime-quiz B3: ~4/10 → ~7.5/10 com prompt denso). Hoje o apelo visual é o produto. GLM constrói bem **se** o prompt tiver: (1) diagnóstico do que está “texto puro”, (2) metas visuais concretas por tela, (3) arquivos-alvo, (4) anti-padrões / sem IP, (5) VERIFY + DoD user-facing. Ver checklist em `workbench/prompts-glm/README.md`.
+Live exemplo quiz: https://gbbragadev.github.io/anime-forge/
 
 ## DoD da iteração
 
 - [ ] Job da QUEUE feito **ou** blocker escrito
-- [ ] `npm run build` OK se tocou código
+- [ ] VERIFY (`build` / `build:quiz`) se tocou código
 - [ ] HANDOFF / QUEUE / CLAIMS atualizados
 - [ ] Claim liberado
+- [ ] Se B3: prompt denso versionado em `workbench/prompts-glm/`
 
 ## Fora de escopo (até job na QUEUE)
 
-Billing real · capability image · CLI create-app · app nativo
+Billing real · capability image · App Store · super-app multi-feature
+
+## Bernstein (opcional)
+
+L1 code-heavy com progresso CLI — `docs/BERNSTEIN-PILOT.md`.  
+**Não** substitui workbench L0/L2.

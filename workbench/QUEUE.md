@@ -5,9 +5,9 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Backlog
 
-- [ ] **L0/P4** Measure anime-quiz (5–7d) — humano: hooks + bio → https://gbbragadev.github.io/anime-forge/
-- [ ] **Opcional** Deploy waifu-chat (server + env keys) — pedido explícito
-- [ ] **Opcional** Custom domain / Vercel token
+- [ ] **L0/P4** Measure anime-quiz (5–7d) — **humano** · URL https://gbbragadev.github.io/anime-forge/ · hooks `docs/content-hooks-anime-quiz.md`
+- [ ] **Opcional** Deploy waifu-chat (Vercel + keys) — pedido + token
+- [ ] **Opcional** Custom domain Pages
 
 ## Doing
 
@@ -15,6 +15,7 @@ _(vazio)_
 
 ## Done
 
+- [x] **Meta** Pipeline/loops upgrade (lições B1/B3/GLM/ship) (2026-07-10)
 - [x] **Ship** commit + push + GitHub Pages anime-quiz (2026-07-10)
 - [x] **L1/B5** Ship check anime-quiz (2026-07-10)
 - [x] **L1/B3** Anime theme anime-quiz — glm (2026-07-10)
