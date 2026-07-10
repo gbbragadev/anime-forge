@@ -257,7 +257,9 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
         type: "CNAME",
         name: deploy.subdomain,
         content: `${appId}.pages.dev`,
-        proxied: true,
+        // DNS-only: proxied trava a validação HTTP do Pages (Error 1014 até ativar);
+        // o Pages já está na edge da CF, proxy aqui é redundante.
+        proxied: false,
       },
     });
 
