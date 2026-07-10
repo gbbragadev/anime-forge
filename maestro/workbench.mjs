@@ -13,7 +13,7 @@ function read(p) {
   return fs.readFileSync(p, "utf8");
 }
 function write(p, s) {
-  fs.writeFileSync(p, s, "utf8");
+  fs.writeFileSync(p, s.replace(/\n{3,}/g, "\n\n"), "utf8"); // colapsa linhas em branco órfãs
 }
 
 function section(paths, name) {
