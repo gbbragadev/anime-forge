@@ -1,0 +1,19 @@
+{
+  "name": "anime-forge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Factory de webapps nichados com IA (anime-first)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @anime-forge/waifu-chat",
+    "build": "npm run build -w @anime-forge/waifu-chat",
+    "lint": "npm run lint -w @anime-forge/waifu-chat",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

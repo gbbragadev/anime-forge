@@ -1,0 +1,23 @@
+# Bernstein — optional L1 orchestration (see docs/BERNSTEIN-PILOT.md)
+# Coding agents: Claude Code / Codex (subscription CLIs). Gemini CLI optional.
+# Product OpenRouter: OPEN_ROUTER_API_KEY env — never used as coding agent brain.
+
+goal: |
+  PILOT ONLY (Anime Forge): Create docs/BERNSTEIN-PILOT.md documenting that
+  Bernstein was installed and doctor found claude+codex adapters.
+  Append one short paragraph to workbench/HANDOFF.md under "## Bernstein pilot".
+  Do NOT modify packages/, apps/waifu-chat/src, or content/personas.
+  Success: docs/BERNSTEIN-PILOT.md exists and `npm run build` exits 0.
+
+cli: auto
+team: auto
+budget: "$5"
+
+constraints:
+  - "Node.js monorepo (npm workspaces)"
+  - "TypeScript / Next.js 15 for apps"
+  - "Gate: npm run build must pass"
+  - "Do not require pytest/vitest if missing — use npm run build as primary gate"
+  - "Surgical changes only — YAGNI / karpathy guidelines"
+  - "Do not commit secrets; do not ask for API keys in chat"
+  - "OPEN_ROUTER_API_KEY is product-only (system env), not for coding agents"

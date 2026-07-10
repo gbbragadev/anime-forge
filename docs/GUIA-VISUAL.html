@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anime Forge — Guia Visual (Subscriptions only)</title>
+  <style>
+    :root {
+      --bg: #0b0614;
+      --surface: #161022;
+      --surface2: #1f1730;
+      --ink: #f5f0ff;
+      --muted: #a89bc0;
+      --pink: #ff4d9a;
+      --purple: #c44dff;
+      --cyan: #38bdf8;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #fb7185;
+      --border: rgba(255,255,255,.08);
+      --glow: rgba(255,77,154,.35);
+      --font: "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        radial-gradient(900px 400px at 0% 0%, #3b126055, transparent 50%),
+        radial-gradient(700px 360px at 100% 10%, #5a104044, transparent 45%),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 64px; }
+    header {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      background: linear-gradient(145deg, #241834cc, #120c1ccc);
+      box-shadow: 0 0 40px var(--glow);
+      margin-bottom: 28px;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      background: linear-gradient(90deg, #fff, #ffb7d5 45%, #c44dff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    header p { margin: 0; color: var(--muted); max-width: 60ch; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .badge {
+      font-size: 12px; font-weight: 700; letter-spacing: .02em;
+      padding: 6px 12px; border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .badge.ok { background: rgba(52,211,153,.12); border-color: rgba(52,211,153,.4); color: var(--green); }
+    .badge.no { background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.45); color: var(--red); }
+    .badge.info { background: rgba(56,189,248,.1); border-color: rgba(56,189,248,.35); color: var(--cyan); }
+
+    h2 {
+      margin: 36px 0 14px;
+      font-size: 1.25rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2 .n {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: grid; place-items: center; font-size: 13px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+    }
+    h3 { margin: 18px 0 10px; font-size: 1rem; color: #e9d5ff; }
+
+    .card {
+      background: rgba(22,16,34,.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .yes {
+      border-color: rgba(52,211,153,.35);
+      background: linear-gradient(160deg, rgba(52,211,153,.08), transparent 60%), var(--surface);
+    }
+    .no {
+      border-color: rgba(251,113,133,.4);
+      background: linear-gradient(160deg, rgba(251,113,133,.08), transparent 60%), var(--surface);
+    }
+    .yes h3 { color: var(--green); margin-top: 0; }
+    .no h3 { color: var(--red); margin-top: 0; }
+    ul { margin: 8px 0 0; padding-left: 1.15rem; color: var(--muted); }
+    li { margin: 4px 0; }
+    li strong { color: var(--ink); }
+
+    /* flow diagram */
+    .flow {
+      display: flex; flex-direction: column; gap: 0; align-items: stretch;
+    }
+    .loop-box {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin: 6px 0;
+      position: relative;
+    }
+    .loop-box.l0 { border-color: rgba(255,77,154,.4); box-shadow: inset 0 0 0 1px rgba(255,77,154,.08); }
+    .loop-box.l1 { border-color: rgba(56,189,248,.4); }
+    .loop-box.l2 { border-color: rgba(251,191,36,.45); }
+    .loop-label {
+      font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .l0 .loop-label { color: var(--pink); }
+    .l1 .loop-label { color: var(--cyan); }
+    .l2 .loop-label { color: var(--amber); }
+
+    .steps {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      min-width: 88px;
+      text-align: center;
+    }
+    .step small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .arrow { color: var(--muted); font-weight: 700; padding: 0 2px; }
+    .arrow-down {
+      text-align: center; color: var(--muted); font-size: 20px; line-height: 1; margin: 2px 0;
+    }
+
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--surface2); color: #e9d5ff; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    td { color: var(--muted); }
+    td strong { color: var(--ink); }
+
+    .callout {
+      border-left: 4px solid var(--pink);
+      background: rgba(255,77,154,.08);
+      padding: 14px 16px;
+      border-radius: 0 12px 12px 0;
+      margin: 14px 0;
+    }
+    .callout.warn { border-left-color: var(--amber); background: rgba(251,191,36,.08); }
+    .callout.ok { border-left-color: var(--green); background: rgba(52,211,153,.08); }
+
+    pre.cmd {
+      background: #0a0610;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      color: #e9d5ff;
+      margin: 10px 0 0;
+    }
+    code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; color: #fbcfe8; }
+
+    .agent-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 800px) { .agent-cards { grid-template-columns: 1fr; } }
+    .agent {
+      border-radius: 16px; padding: 16px; border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .agent h3 { margin: 0 0 6px; }
+    .agent .sub { font-size: 12px; color: var(--green); font-weight: 700; margin-bottom: 8px; }
+    .agent p { margin: 0; font-size: 13px; color: var(--muted); }
+
+    .checklist label {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      color: var(--muted); font-size: 14px;
+    }
+    .checklist label:last-child { border-bottom: 0; }
+    .checklist input { margin-top: 3px; accent-color: var(--pink); }
+
+    footer {
+      margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--muted);
+    }
+    a { color: #f9a8d4; }
+    .path { font-size: 12px; color: var(--muted); word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Anime Forge — Guia Visual</h1>
+      <p>
+        Como usar a factory com <strong style="color:#fff">Codex + Claude + Grok + Gemini</strong> em loops,
+        gastando só o que já está na <strong style="color:#fff">sua subscription</strong> —
+        nunca API paga de agente.
+      </p>
+      <div class="badge-row">
+        <span class="badge ok">✓ Sub Claude / Codex / Grok / Gemini</span>
+        <span class="badge no">✗ API paga de coding agent</span>
+        <span class="badge info">Repo: C:\Dev\anime-forge</span>
+      </div>
+      <p class="path" style="margin-top:12px">Abra este arquivo no browser · docs/GUIA-VISUAL.html</p>
+    </header>
+
+    <!-- REGRA DE OURO -->
+    <h2><span class="n">0</span> Regra de ouro: subscription, não API</h2>
+    <div class="grid-2">
+      <div class="card yes">
+        <h3>USE (já pago na sub)</h3>
+        <ul>
+          <li><strong>Claude Code</strong> logado na conta Anthropic (Pro/Max/Team)</li>
+          <li><strong>Codex</strong> via OAuth / plano Codex da sub</li>
+          <li><strong>Grok</strong> app / Grok Build / xAI sub</li>
+          <li><strong>Gemini</strong> app Google / Gemini CLI / AI Pro — ver <code>GEMINI.md</code></li>
+          <li><strong>Workbench no git</strong> — QUEUE / HANDOFF / CLAIMS</li>
+          <li><strong>Prompts em</strong> <code>docs/prompts/</code></li>
+        </ul>
+      </div>
+      <div class="card no">
+        <h3>NÃO USE (API paga de AGENT)</h3>
+        <ul>
+          <li><strong>ANTHROPIC_API_KEY</strong> pay-as-you-go para “ser o Claude”</li>
+          <li><strong>OPENAI_API_KEY</strong> avulsa para coding agent</li>
+          <li><strong>GEMINI_API_KEY</strong> / AI Studio pay-as-you-go como motor do agent</li>
+          <li><strong>OpenRouter como motor do agente</strong> (≠ modelo Gemini no OpenRouter do <em>app</em>)</li>
+          <li>Scripts que disparam LLM pago em background pro agent</li>
+        </ul>
+        <p style="margin:12px 0 0;font-size:13px;color:var(--green)">
+          Exceção: keys OpenRouter do <strong>produto</strong> (tabela abaixo).
+        </p>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <strong>Duas carteiras</strong> — agent na sub; OpenRouter só no produto.
+      Agent e app <strong>leem</strong> <code>OPEN_ROUTER_API_KEY</code> da env do sistema — <strong>não pedem</strong> a key no chat.
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0;color:var(--cyan)">Tabela canônica — keys</h3>
+      <table>
+        <tr>
+          <th>Key</th>
+          <th>Agent faz o quê?</th>
+          <th>Para quê</th>
+        </tr>
+        <tr>
+          <td><strong>OPEN_ROUTER_API_KEY</strong></td>
+          <td style="color:var(--green)"><strong>Pega direto da env do sistema — não pede</strong></td>
+          <td>App — padrão smoke (Windows)</td>
+        </tr>
+        <tr>
+          <td><strong>OPENROUTER_API_KEY</strong></td>
+          <td style="color:var(--green)">Lê se existir — não pede</td>
+          <td>App — fallback <code>.env.local</code></td>
+        </tr>
+        <tr>
+          <td><strong>OPENROUTER_MODEL</strong></td>
+          <td style="color:var(--green)">Lê se existir</td>
+          <td>Modelo do chat</td>
+        </tr>
+        <tr>
+          <td><strong>ANTHROPIC_API_KEY</strong></td>
+          <td style="color:var(--red)"><strong>Não</strong></td>
+          <td>Coding agent</td>
+        </tr>
+        <tr>
+          <td><strong>OPENAI_API_KEY</strong></td>
+          <td style="color:var(--red)"><strong>Não</strong></td>
+          <td>Coding agent</td>
+        </tr>
+        <tr>
+          <td><strong>GEMINI_API_KEY</strong> (pago)</td>
+          <td style="color:var(--red)"><strong>Não</strong></td>
+          <td>Coding agent — use sub Gemini app</td>
+        </tr>
+      </table>
+      <p style="margin:12px 0 0;font-size:13px;color:var(--muted)">
+        Você seta <code>OPEN_ROUTER_API_KEY</code> uma vez no Windows. O agent e o app leem sozinhos.
+      </p>
+    </div>
+
+    <!-- LOOPS -->
+    <h2><span class="n">1</span> Os 3 loops (visão geral)</h2>
+    <div class="flow">
+      <div class="loop-box l0">
+        <div class="loop-label">L0 · Product loop · 1 ideia / 1 app</div>
+        <div class="steps">
+          <div class="step">P0 Score<small>Grok sub</small></div>
+          <span class="arrow">→</span>
+          <div class="step">P1 Content<small>Grok + você</small></div>
+          <span class="arrow">→</span>
+          <div class="step">P2 Build<small>entra L1</small></div>
+          <span class="arrow">→</span>
+          <div class="step">P3 Ship<small>sub qualquer</small></div>
+          <span class="arrow">→</span>
+          <div class="step">P4 Measure<small>5–7 dias</small></div>
+          <span class="arrow">→</span>
+          <div class="step">P5 Kill|Scale<small>decisão</small></div>
+        </div>
+      </div>
+      <div class="arrow-down">↓ dentro de P2</div>
+      <div class="loop-box l1">
+        <div class="loop-label">L1 · Build loop · 1 sessão = 1 iteração</div>
+        <div class="steps">
+          <div class="step">Claim<small>QUEUE</small></div>
+          <span class="arrow">→</span>
+          <div class="step">Implement<small>sub agent</small></div>
+          <span class="arrow">→</span>
+          <div class="step">Verify<small>npm run build</small></div>
+          <span class="arrow">→</span>
+          <div class="step">Fix<small>se falhar</small></div>
+          <span class="arrow">→</span>
+          <div class="step">Handoff<small>atualizar md</small></div>
+        </div>
+      </div>
+      <div class="arrow-down">↓ se rate limit da sub</div>
+      <div class="loop-box l2">
+        <div class="loop-label">L2 · Handoff loop · troca de subscription, mesmo job</div>
+        <div class="steps">
+          <div class="step">Limite atingido</div>
+          <span class="arrow">→</span>
+          <div class="step">HANDOFF.md</div>
+          <span class="arrow">→</span>
+          <div class="step">Outro app da sub</div>
+          <span class="arrow">→</span>
+          <div class="step">Retoma job</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Por que loops maximizam a sub?</strong>
+      Você não “paga de novo” ao trocar Claude → Codex → Grok → Gemini: cada um come o limite
+      <em>da própria subscription</em>. O estado fica no repo (grátis). Não reexplica o projeto.
+    </div>
+
+    <!-- COMO ABRIR -->
+    <h2><span class="n">2</span> Como abrir (4 motores = 4 subs)</h2>
+    <div class="agent-cards" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="agent">
+        <h3>Claude Code</h3>
+        <div class="sub">SUB · sem API key avulsa</div>
+        <p>Pasta do repo. Lê <code>CLAUDE.md</code> → <code>AGENTS.md</code>. Ideal B3 UI.</p>
+        <pre class="cmd">cd C:\Dev\anime-forge
+# claude</pre>
+      </div>
+      <div class="agent">
+        <h3>Codex</h3>
+        <div class="sub">SUB / OAuth · full-auto</div>
+        <p>Lê <code>AGENTS.md</code>. Ideal L1/B1 e B4.</p>
+        <pre class="cmd">cd C:\Dev\anime-forge
+# codex</pre>
+      </div>
+      <div class="agent">
+        <h3>Grok</h3>
+        <div class="sub">SUB xAI / Grok app</div>
+        <p>Workspace ou colar <code>docs/prompts/</code>. Ideal L0 e B2.</p>
+        <pre class="cmd"># Grok Build / colar L0-*.md</pre>
+      </div>
+      <div class="agent">
+        <h3>Gemini</h3>
+        <div class="sub">SUB Google / AI Pro · ver GEMINI.md</div>
+        <p>App Gemini ou CLI com conta Google. Ideal P0/P1/B2 (junto com Grok). Não use <code>GEMINI_API_KEY</code> paga pro agent.</p>
+        <pre class="cmd"># Gemini app + pasta / prompts
+# ou gemini CLI (sub Google)</pre>
+      </div>
+    </div>
+
+    <!-- FRASE MAGICA -->
+    <h2><span class="n">3</span> Frase mágica (copia e cola em qualquer sub)</h2>
+    <div class="card">
+      <pre class="cmd">Repo: C:\Dev\anime-forge
+Leia AGENTS.md + workbench/HANDOFF.md + workbench/QUEUE.md.
+Identifique o loop (L0/L1/L2) e rode UMA iteração do job livre.
+Claime em CLAIMS.md. Ao terminar: HANDOFF + QUEUE + liberar claim.
+IMPORTANTE: coding agent = subscription Claude/Codex/Grok/Gemini.
+Produto: ler OPEN_ROUTER_API_KEY da env — NÃO pedir no chat.
+Nunca ANTHROPIC/OPENAI/GEMINI_API_KEY paga para o agent.</pre>
+    </div>
+
+    <h3>Troca de limite (L2)</h3>
+    <div class="card">
+      <pre class="cmd"># Cole docs/prompts/L2-handoff.md e diga:
+Provedor anterior: Claude (limite)
+Provedor atual: Codex
+Continue do HANDOFF — não recomece o app.</pre>
+    </div>
+
+    <!-- QUEM FAZ O QUE -->
+    <h2><span class="n">4</span> Qual sub para qual job</h2>
+    <div class="card" style="padding:0; overflow:hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Loop</th>
+            <th>Subscription preferida</th>
+            <th>Prompt pronto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>P0 Scorecard</strong></td>
+            <td>L0</td>
+            <td>Grok ou <strong>Gemini</strong></td>
+            <td><code>docs/prompts/L0-P0-scorecard.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>P1 Content hooks</strong></td>
+            <td>L0</td>
+            <td>Grok ou <strong>Gemini</strong></td>
+            <td><code>docs/prompts/L0-P1-content-hooks.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>B1 Scaffold</strong></td>
+            <td>L1</td>
+            <td>Codex</td>
+            <td><code>docs/prompts/L1-B1-scaffold.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>B2 Personas</strong></td>
+            <td>L1</td>
+            <td>Grok ou <strong>Gemini</strong></td>
+            <td><code>docs/prompts/L1-B2-personas.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>B3 UI polish</strong></td>
+            <td>L1</td>
+            <td>Claude (Gemini backup)</td>
+            <td><code>docs/prompts/L1-B3-ui-polish.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>B4 Wire API</strong></td>
+            <td>L1</td>
+            <td>Codex</td>
+            <td><code>docs/prompts/L1-B4-wire-api.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>B5 Ship check</strong></td>
+            <td>L1</td>
+            <td>Qualquer sub</td>
+            <td><code>docs/prompts/L1-B5-ship-check.md</code></td>
+          </tr>
+          <tr>
+            <td><strong>Handoff</strong></td>
+            <td>L2</td>
+            <td>A sub com limite livre</td>
+            <td><code>docs/prompts/L2-handoff.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ROTINA -->
+    <h2><span class="n">5</span> Rotina do dia (exemplo)</h2>
+    <div class="card">
+      <div class="steps" style="flex-direction:column; align-items:stretch; gap:10px">
+        <div class="step" style="text-align:left">
+          <strong style="color:var(--pink)">Manhã · Grok ou Gemini (sub)</strong>
+          <small style="display:block;margin-top:4px">P0 score · P1 hooks · B2 personas — gira entre Grok e Gemini se um limitou</small>
+        </div>
+        <div class="step" style="text-align:left">
+          <strong style="color:var(--cyan)">Tarde · Codex (sub)</strong>
+          <small style="display:block;margin-top:4px">L1 B1/B4 no app da QUEUE · build até verde · atualiza HANDOFF</small>
+        </div>
+        <div class="step" style="text-align:left">
+          <strong style="color:var(--purple)">Se limitou · Claude ou Gemini (sub)</strong>
+          <small style="display:block;margin-top:4px">L2 handoff · B3 UI (Claude) · ou mais L0/B2 (Gemini)</small>
+        </div>
+        <div class="step" style="text-align:left">
+          <strong style="color:var(--green)">Noite · você</strong>
+          <small style="display:block;margin-top:4px">Postar content · measure · decidir kill/scale · enfileirar jobs</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKBENCH -->
+    <h2><span class="n">6</span> Workbench (estado grátis entre subs)</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--cyan)">QUEUE.md</h3>
+        <p style="margin:0;color:var(--muted);font-size:14px">Lista de jobs. Um job = uma iteração. Backlog → Doing → Done.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--pink)">HANDOFF.md</h3>
+        <p style="margin:0;color:var(--muted);font-size:14px">O que o último agente fez + Next + Blockers. O “cérebro” da troca L2.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--amber)">CLAIMS.md</h3>
+        <p style="margin:0;color:var(--muted);font-size:14px">Quem (qual sub) está em qual loop agora — evita dois agents no mesmo arquivo.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:var(--green)">AGENTS.md</h3>
+        <p style="margin:0;color:var(--muted);font-size:14px">Contrato único. Todo app da sub lê a mesma regra.</p>
+      </div>
+    </div>
+
+    <!-- PRODUTO VS AGENTE -->
+    <h2><span class="n">7</span> Produto WaifuChat ≠ agente</h2>
+    <div class="card warn callout" style="border-left-color:var(--amber)">
+      <strong>OpenRouter no app</strong> = o agent <strong>pode pedir</strong> essa key ao configurar o produto.<br />
+      Fluxo típico do agent:
+      <ul>
+        <li>Agent <strong>não pede</strong> a key — lê <code>OPEN_ROUTER_API_KEY</code> do sistema</li>
+        <li>Smoke: <code>GET /api/health</code></li>
+        <li>Se faltar: HANDOFF “setar no Windows” (sem colar secret no chat)</li>
+        <li>Nunca commitar; nunca usar como motor do coding agent</li>
+      </ul>
+      UI/personas/paywall mock podem ir <strong>sem</strong> key; smoke de stream = precisa OpenRouter do app.
+    </div>
+
+    <!-- CHECKLIST -->
+    <h2><span class="n">8</span> Checklist antes de cada sessão</h2>
+    <div class="card checklist">
+      <label><input type="checkbox" /> Estou no app da <strong>subscription</strong> (Claude / Codex / Grok / Gemini), não API key paga de agent</label>
+      <label><input type="checkbox" /> Não uso <code>ANTHROPIC_API_KEY</code> / <code>OPENAI_API_KEY</code> de pay-as-you-go no <em>agente</em></label>
+      <label><input type="checkbox" /> OpenRouter: agent lê env do sistema; <strong>não pede</strong> key no chat</label>
+      <label><input type="checkbox" /> Li <code>workbench/HANDOFF.md</code> e <code>QUEUE.md</code></label>
+      <label><input type="checkbox" /> Vou rodar <strong>uma</strong> iteração (um job), não o monorepo inteiro</label>
+      <label><input type="checkbox" /> No fim atualizo HANDOFF + QUEUE + liberar CLAIM</label>
+      <label><input type="checkbox" /> Se limitou: L2 → outra sub, mesmo job</label>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <h2><span class="n">9</span> Atalhos no repo</h2>
+    <div class="card">
+      <table>
+        <tr><td><strong>Contrato</strong></td><td><code>AGENTS.md</code> · <code>CLAUDE.md</code></td></tr>
+        <tr><td><strong>Loops detalhados</strong></td><td><code>docs/AGENT-PIPELINE.md</code></td></tr>
+        <tr><td><strong>Negócio / kill</strong></td><td><code>docs/PLAYBOOK.md</code></td></tr>
+        <tr><td><strong>Prompts</strong></td><td><code>docs/prompts/</code></td></tr>
+        <tr><td><strong>Skill</strong></td><td><code>.agents/skills/ship-niche-app/SKILL.md</code></td></tr>
+        <tr><td><strong>Estado</strong></td><td><code>workbench/*</code></td></tr>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <strong>Resumo em uma frase:</strong>
+      Gire Claude → Codex → Grok → <strong>Gemini</strong> pelas <em>subscrições</em>;
+      OpenRouter: lido da env do sistema (<code>OPEN_ROUTER_API_KEY</code>); agent não pede no chat;
+      nunca API paga como motor do agent.
+    </div>
+
+    <footer>
+      Anime Forge · docs/GUIA-VISUAL.html · atualizado para política subscription-only de agentes.
+      Para editar o fluxo de código, veja AGENTS.md.
+    </footer>
+  </div>
+</body>
+</html>

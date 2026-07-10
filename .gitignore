@@ -1,0 +1,23 @@
+node_modules
+.next
+.turbo
+dist
+.env
+.env.local
+.env*.local
+*.log
+.DS_Store
+coverage
+.vercel
+.sdd/runtime/
+
+# Windows reserved / Bernstein
+nul
+NUL
+.sdd/runtime/
+.sdd/runs/
+.sdd/audit/
+.sdd/lineage/
+.sdd/memory/
+.sdd/catalogs/
+
