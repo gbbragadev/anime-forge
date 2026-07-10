@@ -13,6 +13,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 // buildSpawn = matriz única de executores (compartilhada com a engine).
@@ -24,6 +25,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PORT = Number(process.env.MAESTRO_PORT || 8787);
 const ROSTER_PATH = path.join(__dirname, "roster.json");
+
+// Token por instalação: bloqueia CSRF de sites no browser contra o loopback.
+// UI (same-origin) pega via GET /api/token; forge.mjs lê o arquivo direto.
+const TOKEN_PATH = path.join(__dirname, ".token");
+if (!fs.existsSync(TOKEN_PATH)) {
+  fs.writeFileSync(TOKEN_PATH, crypto.randomBytes(24).toString("hex"), { mode: 0o600 });
+}
+const API_TOKEN = fs.readFileSync(TOKEN_PATH, "utf8").trim();
+
+function checkToken(req) {
+  const got = String(req.headers["x-maestro-token"] || "");
+  const a = Buffer.from(got);
+  const b = Buffer.from(API_TOKEN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/** true se dentro de base (boundary com separador — evita prefixo tipo out-secret) */
+function insideDir(base, candidate) {
+  const resolved = path.resolve(candidate);
+  return resolved === base || resolved.startsWith(base + path.sep);
+}
 
 /** @type {{ status: string, executor: string|null, goal: string|null, startedAt: string|null, endedAt: string|null, exitCode: number|null, logs: string[], pid: number|null }} */
 const state = {
@@ -555,10 +577,9 @@ const engine = createEngine({
 
 function sendJson(res, status, obj) {
   const body = JSON.stringify(obj);
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
-  });
+  // sem Access-Control-Allow-Origin: UI é same-origin; CLI não é browser.
+  // Cross-origin não lê respostas nem manda o header custom (preflight morre aqui).
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(body);
 }
 
@@ -583,12 +604,28 @@ const server = http.createServer(async (req, res) => {
   const method = req.method || "GET";
 
   if (method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
+    // sem headers CORS de propósito: preflight cross-origin morre aqui
+    res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // anti DNS-rebinding: só aceita Host loopback
+  if (!/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(req.headers.host || "")) {
+    res.writeHead(403);
+    res.end("Forbidden host");
+    return;
+  }
+
+  // toda mutação exige o token por instalação (maestro/.token)
+  if (method === "POST" && url.pathname.startsWith("/api/") && !checkToken(req)) {
+    sendJson(res, 401, { ok: false, error: "X-Maestro-Token ausente/inválido — leia maestro/.token" });
+    return;
+  }
+
+  if (url.pathname === "/api/token" && method === "GET") {
+    // legível só same-origin (sem CORS, sites externos recebem resposta opaca)
+    sendJson(res, 200, { token: API_TOKEN });
     return;
   }
 
@@ -693,8 +730,8 @@ const server = http.createServer(async (req, res) => {
     }
     const outDir = path.join(ROOT, "apps", appId, "out");
     const relPath = parts.slice(2).join("/") || "index.html";
-    let f = path.normalize(path.join(outDir, relPath));
-    if (!f.startsWith(outDir)) {
+    let f = path.resolve(outDir, relPath);
+    if (relPath.split(/[\\/]/).includes("..") || !insideDir(outDir, f)) {
       res.writeHead(403);
       res.end("Forbidden");
       return;
@@ -714,8 +751,8 @@ const server = http.createServer(async (req, res) => {
   // static from maestro/
   let rel = url.pathname === "/" ? "/index.html" : url.pathname;
   rel = path.normalize(rel).replace(/^(\.\.[/\\])+/, "");
-  const filePath = path.join(__dirname, rel);
-  if (!filePath.startsWith(__dirname)) {
+  const filePath = path.resolve(__dirname, "." + path.sep + rel);
+  if (!insideDir(__dirname, filePath) || path.basename(filePath) === ".token") {
     res.writeHead(403);
     res.end("Forbidden");
     return;

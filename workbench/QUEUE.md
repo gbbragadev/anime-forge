@@ -9,7 +9,8 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 ## Backlog
 
 - [ ] **L0/P4** Measure anime-quiz (5–7d) — **humano** · URL https://gbbragadev.github.io/anime-forge/ · hooks `docs/content-hooks-anime-quiz.md`
-- [ ] **L0/P0** Scorecard: _próxima ideia_ — _(substitua: app-id + uma frase; ou rode L0-NOVA-IDEIA)_
+- [ ] **L0/P0** Próxima ideia via autopilot: `npm run forge -- new "<ideia>" --team grok-glm-front` (P0 roda sozinho, você decide o gate)
+- [ ] **Infra** Token Cloudflare Pages:Edit + DNS:Edit → habilita deploy automático `<app>.gbbragadev.com`
 - [ ] **Opcional** Deploy waifu-chat (Vercel + keys) — pedido + token
 - [ ] **Opcional** Custom domain Pages
 

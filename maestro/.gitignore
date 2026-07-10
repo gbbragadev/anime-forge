@@ -4,3 +4,4 @@ last-run.json
 runs/
 _stderr_sample.txt
 pipeline.json
+.token

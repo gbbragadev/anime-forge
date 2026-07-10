@@ -452,12 +452,21 @@
       }
     }
 
+    let TOKEN = "";
+    async function loadToken() {
+      // same-origin only (sem CORS); necessário nos POSTs contra CSRF
+      try {
+        TOKEN = (await (await fetch((API || "") + "/api/token")).json()).token || "";
+      } catch { /* server off */ }
+    }
+
     async function checkApi() {
       const pill = document.getElementById("pill-api");
       try {
         const r = await fetch((API || "") + "/api/status");
         if (!r.ok) throw new Error("bad");
         const j = await r.json();
+        if (!TOKEN) loadToken();
         pill.textContent = "API :8787 online";
         pill.classList.add("on");
         setRunPill(j.status, j.executor);
@@ -542,7 +551,7 @@
       try {
         const r = await fetch((API || "") + "/api/run", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Maestro-Token": TOKEN },
           body: JSON.stringify({
             goal,
             executor,
@@ -566,7 +575,7 @@
 
     document.getElementById("btn-stop").addEventListener("click", async () => {
       try {
-        await fetch((API || "") + "/api/stop", { method: "POST" });
+        await fetch((API || "") + "/api/stop", { method: "POST", headers: { "X-Maestro-Token": TOKEN } });
         toast("STOP enviado");
       } catch {
         toast("API offline");

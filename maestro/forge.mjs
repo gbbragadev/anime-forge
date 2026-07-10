@@ -11,6 +11,7 @@
  */
 
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import readline from "node:readline";
@@ -56,10 +57,20 @@ const truncTo = (s, w) => {
 };
 
 // ---------- HTTP ----------
+function apiToken() {
+  try {
+    return fs.readFileSync(path.join(__dirname, ".token"), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
 async function api(pathname, body) {
   const res = await fetch(API + pathname, {
     method: body ? "POST" : "GET",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: body
+      ? { "Content-Type": "application/json", "X-Maestro-Token": apiToken() }
+      : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = await res.json().catch(() => ({}));

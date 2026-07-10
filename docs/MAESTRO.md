@@ -1,5 +1,53 @@
 # Maestro HQ — cara + controle visual do Bernstein
 
+## ⚡ Forge Autopilot (novo — 2026-07-10)
+
+**Pipeline completa "ideia → app no ar" com decisões pontuais.** A CLI `forge` é a interface
+primária; o HQ browser (`:8787`) segue como visor.
+
+```powershell
+cd C:\Dev\anime-forge
+npm run forge -- new "quiz de openings de anime" --team grok-glm-front
+# TUI abre; a pipeline roda P0 → P1 → B1 → B2 → B3(GLM) → B5 → ship sozinha
+# e PAUSA só nos 3 gates humanos: p0-go · b3-visual · deploy
+```
+
+| Comando | Função |
+|---------|--------|
+| `forge new "<ideia>" [--team X] [--capability static\|quiz\|chat] [--subdomain X] [--dry-run]` | inicia pipeline + attach |
+| `forge attach` | TUI ao vivo (q = detach, pipeline continua) |
+| `forge status` | snapshot rápido |
+| `forge decide <gate> <go\|kill\|retry> [feedback]` | decide gate sem TUI |
+| `forge stop` / `forge resume` | pausa / retoma |
+| `forge roster` | teams e players |
+
+**Teams (setup de agente)** — `maestro/roster.json` → `teams`:
+
+| Team | Quem toca |
+|------|-----------|
+| `grok-solo` (default) | Grok em tudo (SuperGrok, limite folgado) |
+| `grok-glm-front` | Grok em tudo + **GLM headless no B3** (sem copiar prompt!) |
+| `quality` | Claude Opus executa · Codex revisa · GLM no front |
+| `dry-run` | executor fake (testar a pipeline sem gastar limite) |
+
+**Git:** branch `pipeline/<app-id>` · commit checkpoint por job PASS · rollback automático
+após 3 falhas · merge+push em master **só** no gate de deploy.
+
+**Rate-limit = L2 automático:** player entra em cooldown 60min e o fallback do team assume.
+
+**Deploy:** `cf-pages` → `<app>.gbbragadev.com` (⚠ exige `CLOUDFLARE_API_TOKEN` com
+Pages:Edit + DNS:Edit — o gate mostra 3 passos manuais se o token for read-only) ·
+`vercel` p/ apps server (`VERCEL_TOKEN`).
+
+**Gotcha Grok (importante):** headless de verdade é `grok -p/--single` — goal posicional abre
+a TUI interativa e NUNCA sai (era a causa do hang + ANSI soup). Já corrigido em
+`maestro/adapters.mjs`.
+
+Estado durável: `maestro/pipeline.json` · logs por job: `maestro/runs/<runId>/` ·
+preview pós-B3: `http://127.0.0.1:8787/preview/<app-id>/`.
+
+---
+
 ## O problema
 
 Bernstein por padrão é **CLI-first** (`bernstein live`, `bernstein -g "..."`).  
