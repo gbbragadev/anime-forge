@@ -393,7 +393,13 @@ export function createEngine({ root, emitLog, emitPipeline }) {
 
   function ensureCleanTree() {
     const dirty = git(["status", "--porcelain"]);
-    if (dirty) throw new Error("working tree suja — commit/stash antes de iniciar a pipeline:\n" + dirty);
+    if (dirty) {
+      throw new Error(
+        "working tree suja — commit/stash antes de iniciar a pipeline:\n" +
+          dirty +
+          "\n(dica: arquivos de ideia vivem em ideas/ — pasta gitignored, não suja a árvore)"
+      );
+    }
   }
 
   function checkpoint(job) {

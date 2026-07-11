@@ -396,8 +396,8 @@ async function wizard() {
       out.push(blank());
       out.push(row(dim("  ex.: quiz de openings de anime · gerador de photocard · fanfic interativa")));
       out.push(blank());
-      out.push(row(dim("  ideia grande/detalhada? escreva num .md e rode:")));
-      out.push(row(dim("  forge new --idea-file minha-ideia.md   (quanto mais contexto, melhor o app)")));
+      out.push(row(dim("  ideia grande/detalhada? escreva um .md em ideas/ (pasta gitignored) e rode:")));
+      out.push(row(dim("  forge new --idea-file ideas/minha-ideia.md   (mais contexto = app melhor)")));
     } else if (st.step === 1) {
       out.push(row(bold("Quem toca? (setup de agentes)")));
       out.push(blank());
@@ -443,7 +443,10 @@ async function wizard() {
   }
 
   const payload = await new Promise((resolve) => {
+    const bootAt = Date.now();
     const onKey = (str, key) => {
+      // terminais Windows soltam ESC fantasma ao entrar em raw mode — engole o boot
+      if (Date.now() - bootAt < 350) return;
       st.err = "";
       if ((key.ctrl && key.name === "c") || key.name === "escape") return finish(null);
       if (st.step === 0) {
@@ -625,5 +628,6 @@ Teams: grok-solo (default) · grok-glm-front · quality · dry-run
 
 main().catch((e) => {
   console.error(fg(RED, `✗ ${e.message || e}`));
-  process.exit(1);
+  process.exitCode = 1; // não usar process.exit(): mata handles do stdin no meio (assertion do libuv)
+  if (process.stdin.isTTY) process.stdin.pause();
 });
