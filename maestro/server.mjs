@@ -723,6 +723,27 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Assets do Next export referenciam a raiz (/_next/*): resolve no out/ dos apps
+  // (necessário pro /preview/<app>/ funcionar — gate visual da pipeline)
+  if (url.pathname.startsWith("/_next/") || url.pathname === "/favicon.ico") {
+    const appsDir = path.join(ROOT, "apps");
+    try {
+      for (const app of fs.readdirSync(appsDir)) {
+        if (!/^[a-z0-9-]+$/.test(app)) continue;
+        const candidate = path.resolve(appsDir, app, "out", "." + url.pathname);
+        if (!insideDir(path.join(appsDir, app, "out"), candidate)) continue;
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          res.writeHead(200, { "Content-Type": contentType(candidate) });
+          fs.createReadStream(candidate).pipe(res);
+          return;
+        }
+      }
+    } catch {}
+    res.writeHead(404);
+    res.end();
+    return;
+  }
+
   // Preview estático do app buildado (gate visual pós-B3): /preview/<appId>/...
   if (url.pathname.startsWith("/preview/")) {
     const parts = url.pathname.split("/").filter(Boolean);

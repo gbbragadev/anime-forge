@@ -25,3 +25,7 @@ NUL
 # Next static export
 apps/*/out/
 
+
+# artefatos de verificação local
+.playwright-mcp/
+*.jpeg

@@ -23,6 +23,14 @@ export const personaSchema = z.object({
   starter: z.string().min(1),
   avatar: z.string().optional(),
   color: z.string().optional(),
+  /** conteúdo EN (regra da casa: apps bilíngues PT-BR + EN) */
+  en: z
+    .object({
+      displayName: z.string().min(1),
+      tags: z.array(z.string()).default([]),
+      starter: z.string().min(1),
+    })
+    .optional(),
 });
 
 export const appConfigSchema = z.object({
@@ -59,3 +67,5 @@ export type AppConfig = z.infer<typeof appConfigSchema>;
 export function defineApp(config: AppConfig): AppConfig {
   return appConfigSchema.parse(config);
 }
+
+export * from "./i18n";

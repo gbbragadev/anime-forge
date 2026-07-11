@@ -3,18 +3,22 @@ import type { Persona } from "@anime-forge/config";
 export type QuizOption = {
   id: string;
   label: string;
+  /** EN (regra da casa: conteúdo bilíngue) */
+  labelEn?: string;
   weights: Record<string, number>;
 };
 
 export type QuizQuestion = {
   id: string;
   text: string;
+  textEn?: string;
   options: QuizOption[];
 };
 
 export type QuizBank = {
   id: string;
   title: string;
+  titleEn?: string;
   locale: string;
   questions: QuizQuestion[];
 };

@@ -8,6 +8,7 @@ import {
   pickWinner,
   type QuizBank,
 } from "../lib/quiz";
+import { useLocale, useT } from "../lib/i18n";
 
 type Props = {
   quiz: QuizBank;
@@ -66,6 +67,19 @@ const SHARE_ICON = (
   </svg>
 );
 
+// símbolo ◆ da ARCANA (gradiente cyan→magenta)
+const ARCANA_DIAMOND = (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="af-arcana-diamond">
+    <defs>
+      <linearGradient id="afArc" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#22d3ee" />
+        <stop offset="1" stopColor="#c44dff" />
+      </linearGradient>
+    </defs>
+    <path d="M12 1 L23 12 L12 23 L1 12 Z" fill="url(#afArc)" />
+  </svg>
+);
+
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function AnimeQuizApp({
@@ -76,11 +90,19 @@ export function AnimeQuizApp({
   shareHooks,
 }: Props) {
   const ids = useMemo(() => archetypes.map((a) => a.id), [archetypes]);
+  const [locale, setLocale] = useLocale();
+  const t = useT(locale);
   const [phase, setPhase] = useState<Phase>("intro");
   const [index, setIndex] = useState(0);
   const [scores, setScores] = useState(() => emptyScores(ids));
   const [result, setResult] = useState<Persona | null>(null);
   const [shareNote, setShareNote] = useState<string | null>(null);
+
+  // conteúdo localizado (fallback PT sempre)
+  const en = locale === "en";
+  const pName = (p: Persona) => (en && p.en ? p.en.displayName : p.displayName);
+  const pStarter = (p: Persona) => (en && p.en ? p.en.starter : p.starter);
+  const pTags = (p: Persona) => (en && p.en?.tags?.length ? p.en.tags : p.tags);
 
   const total = quiz.questions.length;
   const question = quiz.questions[index];
@@ -108,21 +130,22 @@ export function AnimeQuizApp({
 
   async function shareResult() {
     if (!result) return;
-    const hook =
-      shareHooks[0]?.replace("{persona}", result.displayName) ??
-      `Meu arquétipo no ${appName}: ${result.displayName}`;
+    const name = pName(result);
+    const hook = en
+      ? `My anime archetype on ${appName}: ${name}`
+      : (shareHooks[0]?.replace("{persona}", name) ?? `Meu arquétipo no ${appName}: ${name}`);
     const text = [
       hook,
-      result.starter,
-      result.tags.map((t) => `#${t}`).join(" "),
+      pStarter(result),
+      pTags(result).map((tg) => `#${tg.replace(/\s+/g, "")}`).join(" "),
       "#anime #quiz",
-      "link na bio",
+      t("linkInBio"),
     ].join("\n");
 
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: appName, text });
-        setShareNote("Compartilhado!");
+        setShareNote(t("shared"));
         return;
       }
     } catch {
@@ -131,19 +154,57 @@ export function AnimeQuizApp({
 
     try {
       await navigator.clipboard.writeText(text);
-      setShareNote("Texto copiado — cola no Stories/TikTok.");
+      setShareNote(t("copied"));
     } catch {
-      setShareNote("Copie manualmente o resultado e poste.");
+      setShareNote(t("copyManual"));
     }
   }
+
+  const header = (
+    <header className="af-hero">
+      <div className="af-hero-top">
+        <span className="af-brandmark af-brandmark-sm">
+          {ARCANA_DIAMOND}
+          ARCANA
+        </span>
+        <div className="af-lang" role="group" aria-label="Idioma / Language">
+          <button
+            type="button"
+            className={locale === "pt" ? "on" : ""}
+            aria-pressed={locale === "pt"}
+            onClick={() => setLocale("pt")}
+          >
+            PT
+          </button>
+          <button
+            type="button"
+            className={locale === "en" ? "on" : ""}
+            aria-pressed={locale === "en"}
+            onClick={() => setLocale("en")}
+          >
+            EN
+          </button>
+        </div>
+      </div>
+      <h1>{appName}</h1>
+      <p>{t("heroSub")}</p>
+    </header>
+  );
+
+  const seal = (
+    <p className="af-seal-row">
+      <span className="af-seal">by @otaku_sincero69</span>
+    </p>
+  );
 
   if (phase === "intro") {
     return (
       <>
+        {header}
         <section className="af-panel af-quiz-intro">
-          <span className="af-episode-badge">
+          <span className="af-episode-badge af-mono-badge">
             <span className="af-dot" />
-            EP. 01 · QUIZ DE ARQUÉTIPO
+            {t("episodeBadge")}
           </span>
           <div className="af-manga-scene">
             <span className="af-sparkle" style={{ top: "4%", left: "12%", width: 18, height: 18 }}>
@@ -163,24 +224,22 @@ export function AnimeQuizApp({
             </span>
             {SILHOUETTE}
           </div>
-          <h2>{quiz.title}</h2>
-          <p className="af-lead">
-            Respostas honestas, resultado na hora. No fim sai um card pra printar e
-            compartilhar — você pode ser um destes ↓
-          </p>
-          <div className="af-arch-preview" aria-label="Seus possíveis arquétipos">
+          <h2>{en && quiz.titleEn ? quiz.titleEn : quiz.title}</h2>
+          <p className="af-lead">{t("lead")}</p>
+          <div className="af-arch-preview" aria-label={t("possible")}>
             {archetypes.map((a) => (
               <div className="af-arch-chip" key={a.id} style={{ ["--chip" as string]: a.color }}>
-                <span className="af-arch-dot">{a.displayName.charAt(0)}</span>
+                <span className="af-arch-dot">{pName(a).charAt(0)}</span>
                 <span className="af-arch-name">{cap(a.id)}</span>
               </div>
             ))}
           </div>
           <button type="button" className="af-btn-primary" onClick={start}>
-            Começar o arco
+            {t("start")}
           </button>
         </section>
-        <p className="af-disclaimer">{disclaimer}</p>
+        {seal}
+        <p className="af-disclaimer">{en ? t("disclaimerEn") : disclaimer}</p>
       </>
     );
   }
@@ -188,6 +247,7 @@ export function AnimeQuizApp({
   if (phase === "result" && result) {
     return (
       <>
+        {header}
         <div className="af-progress" aria-hidden>
           <div className="af-progress-bar" style={{ width: `${progress}%` }} />
         </div>
@@ -199,56 +259,67 @@ export function AnimeQuizApp({
           <span className="af-corner af-corner-tr" />
           <span className="af-corner af-corner-bl" />
           <span className="af-corner af-corner-br" />
+          <span className="af-rec af-mono-badge" aria-hidden>
+            <span className="af-rec-dot" /> REC
+          </span>
           <div className="af-result-aura" aria-hidden />
           <div className="af-result-head">
-            <div className="af-result-monogram">{result.displayName.charAt(0)}</div>
-            <p className="af-kicker">Seu arquétipo</p>
-            <h2>{result.displayName}</h2>
+            <div className="af-result-monogram">{pName(result).charAt(0)}</div>
+            <p className="af-kicker af-mono-badge">{t("yourArchetype")}</p>
+            <h2>{pName(result)}</h2>
           </div>
-          <p className="af-result-blurb">{result.starter}</p>
+          <p className="af-result-blurb">{pStarter(result)}</p>
           <ul className="af-tags">
-            {result.tags.map((t) => (
-              <li key={t}>{t}</li>
+            {pTags(result).map((tg) => (
+              <li key={tg}>{tg}</li>
             ))}
           </ul>
-          <p className="af-watermark">ANIMEQUIZ · ARQUÉTIPOS ORIGINAIS</p>
+          <p className="af-timestamp af-mono-badge" aria-hidden>
+            ◆ {new Date().getFullYear()} ▸ EP.01 ▸ {String(total).padStart(2, "0")}/{String(total).padStart(2, "0")}
+          </p>
+          <p className="af-watermark">{t("watermark")}</p>
         </section>
         <div className="af-actions">
           <button type="button" className="af-btn-primary" onClick={shareResult}>
             {SHARE_ICON}
-            Compartilhar card
+            {t("share")}
           </button>
           <button type="button" className="af-btn-ghost" onClick={start}>
-            Refazer o arco
+            {t("redo")}
           </button>
         </div>
-        {shareNote && <p className="af-share-note">{shareNote}</p>}
-        <p className="af-disclaimer">{disclaimer}</p>
+        {shareNote && <p className="af-share-note" role="status">{shareNote}</p>}
+        {seal}
+        <p className="af-disclaimer">{en ? t("disclaimerEn") : disclaimer}</p>
       </>
     );
   }
 
   if (!question) {
     return (
-      <section className="af-panel">
-        <p>Quiz sem perguntas. Verifique o banco JSON.</p>
-        <button type="button" className="af-btn-ghost" onClick={() => setPhase("intro")}>
-          Voltar
-        </button>
-      </section>
+      <>
+        {header}
+        <section className="af-panel">
+          <p>{t("emptyQuiz")}</p>
+          <button type="button" className="af-btn-ghost" onClick={() => setPhase("intro")}>
+            {t("back")}
+          </button>
+        </section>
+      </>
     );
   }
 
   return (
     <>
+      {header}
       <div className="af-topbar">
         <div className="af-scene-head">
-          <span className="af-scene-label">CENA</span>
+          <span className="af-scene-label">{t("scene")}</span>
           <span className="af-scene-num">{String(index + 1).padStart(2, "0")}</span>
           <span className="af-scene-total">/ {String(total).padStart(2, "0")}</span>
         </div>
         <button type="button" className="af-btn-ghost af-btn-sm" onClick={() => setPhase("intro")}>
-          Sair
+          {t("exit")}
         </button>
       </div>
       <div
@@ -261,7 +332,7 @@ export function AnimeQuizApp({
         <div className="af-progress-bar" style={{ width: `${progress}%` }} />
       </div>
       <section className="af-panel af-panel--scene">
-        <h2 className="af-q">{question.text}</h2>
+        <h2 className="af-q">{en && question.textEn ? question.textEn : question.text}</h2>
         <div className="af-options" role="list">
           {question.options.map((opt, i) => (
             <button
@@ -272,7 +343,7 @@ export function AnimeQuizApp({
               onClick={() => choose(opt.weights)}
             >
               <span className="af-option-mark">{String.fromCharCode(65 + i)}</span>
-              <span className="af-option-label">{opt.label}</span>
+              <span className="af-option-label">{en && opt.labelEn ? opt.labelEn : opt.label}</span>
             </button>
           ))}
         </div>
