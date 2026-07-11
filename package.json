@@ -10,9 +10,11 @@
   "scripts": {
     "dev": "npm run dev -w @anime-forge/waifu-chat",
     "dev:quiz": "npm run dev -w @anime-forge/anime-quiz",
+    "dev:deck": "npm run dev -w @anime-forge/anima-deck",
     "build": "npm run build -w @anime-forge/waifu-chat",
     "build:quiz": "npm run build -w @anime-forge/anime-quiz",
-    "build:all": "npm run build -w @anime-forge/waifu-chat ; npm run build -w @anime-forge/anime-quiz",
+    "build:deck": "npm run build -w @anime-forge/anima-deck",
+    "build:all": "npm run build -w @anime-forge/waifu-chat ; npm run build -w @anime-forge/anime-quiz ; npm run build -w @anime-forge/anima-deck",
     "lint": "npm run lint -w @anime-forge/waifu-chat",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "maestro": "node maestro/server.mjs",

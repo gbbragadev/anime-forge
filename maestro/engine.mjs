@@ -437,6 +437,16 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       p.deploy.url = `https://${p.deploy.subdomain}.gbbragadev.com (dry-run, não publicado)`;
       return { pass: true, detail: "dry-run: ship simulado" };
     }
+    // handoffUpdate() suja HANDOFF.md a cada save (inclusive no decide→retry) → git checkout
+    // master abortaria. Commita a árvore como checkpoint de pré-ship antes de trocar de branch.
+    try {
+      if (git(["status", "--porcelain"])) {
+        git(["add", "-A"]);
+        git(["commit", "-m", `forge(${p.appId}): pre-ship workbench`]);
+      }
+    } catch (e) {
+      log(`✗ pre-ship commit falhou: ${String(e).slice(0, 200)}`);
+    }
     try {
       git(["checkout", "master"]);
       git(["merge", "--no-ff", p.git.branch, "-m", `forge(${p.appId}): merge pipeline (ship)`]);

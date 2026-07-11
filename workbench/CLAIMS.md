@@ -5,6 +5,8 @@ Uma linha = uma **iteração** de loop. Limpar ao terminar.
 | slot | agent | loop | job | app / area | since | notes |
 |------|-------|------|-----|------------|-------|-------|
 | — | — | — | — | — | — | livre |
+| F | — | — | — | — | — | (livre) L1/B5 anima-deck DONE por grok-solo |
+| | | | | | | |
 
 ## Protocolo
 
