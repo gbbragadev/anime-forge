@@ -94,20 +94,10 @@ entra com backend.
 ## Métrica do measure (P4)
 Cards forjados (telemetria simples de evento no client se disponível sem backend;
 senão tráfego CF) + posts/prints marcando a página.
-- **Team:** grok-glm-front · **Status:** blocked
-- **Job atual:** P3 (7/7)
+- **Team:** grok-glm-front · **Status:** done
+- **Job atual:** — (8/7)
 - **Branch:** pipeline/anima-deck · checkpoints: 7
-- **⏸ GATE pendente:** `blocked-P3` — P3 bloqueado: merge/push falhou: Error: Command failed: git checkout master
-error: Your local changes to the following files would be overwritten by checkout:
-	workbench/HANDOFF.md
-Please commit your changes or stash them before you switch branches.
-Aborting
-. retry (zera tentativas) ou kill? → `forge decide blocked-P3 go|kill`
-- BLOCKED: merge/push falhou: Error: Command failed: git checkout master
-error: Your local changes to the following files would be overwritten by checkout:
-	workbench/HANDOFF.md
-Please commit your changes or stash them before you switch branches.
-Aborting
-
-_Atualizado 2026-07-11T05:33:52.708Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
+- **URL:** https://anima-deck.gbbragadev.com
+- DONE. Próximo: P4 measure (humano, 5–7d) — postar hooks de docs/content-hooks-anima-deck.md
+_Atualizado 2026-07-11T05:41:11.447Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
 <!-- forge:end -->

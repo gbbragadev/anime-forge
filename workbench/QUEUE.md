@@ -8,6 +8,8 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Backlog
 
+
+- [ ] **L0/P4** Measure anima-deck (5–7d) — **humano** · https://anima-deck.gbbragadev.com
 - [ ] **P3** Deploy anima-deck → CF Pages `deck.gbbragadev.com`
 - [ ] **L0/P4** Measure anime-quiz (5–7d) — **humano** · URL https://quiz.gbbragadev.com (+ Pages antiga) · hooks `docs/content-hooks-anime-quiz.md`
 - [ ] **L0/P0** Próxima ideia via autopilot: `.\forge` (tela de setup) ou `forge new "<ideia>" --team grok-glm-front`
