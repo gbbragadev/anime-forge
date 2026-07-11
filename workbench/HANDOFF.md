@@ -1,16 +1,18 @@
 # HANDOFF
 
 ## Loop ativo
-**L1 Build — anima-deck** · B2 personas **DONE** · próximo = B3 prompt GLM (UI polish) e/ou B5 ship check
+**L1 Build — anima-deck** · B3 UI polish **DONE** · próximo = B5 ship check + P3 deploy CF Pages
 
 ## Last agent
-grok-solo | 2026-07-11 | L1/B2 anima-deck
+glm-front | 2026-07-11 | L1/B3 anima-deck
 
-## Last iteration — L1/B2 anima-deck (2026-07-11)
-- Pack `content/personas/anima-deck-v1.json`: **12** arquétipos ORIGINAIS (PT+EN, tags, color, starter, system) — sem IP.
-- Wire `apps/anima-deck/app.config.ts` → pack JSON (mesmo padrão anime-quiz).
+## Last iteration — L1/B3 anima-deck (2026-07-11)
+- Photocard: entrance `af-reveal`, frame interno duplo, ● REC piscando (VHS), aura de speed-lines rotativa atrás do avatar (estética manga).
+- Reveal WOW escalado por raridade: flash radial (intensidade por `--reveal-glow`) + pop dramático c/ rotação p/ épica/lendária.
+- Intro: `af-reveal` na silhueta, glow no badge EP, 3 sparkles flutuantes; chips c/ pop+hover; botões c/ active/ghost-hover; reduce-motion global catch-all.
+- ZERO deps novas, CSS-first; share/download/refazer intactos; i18n PT+EN preservado; sem IP de franquia.
 - VERIFY: `npm run build -w @anime-forge/anima-deck` **PASS** (exit 0).
-- **Next:** L1/B3 prompt GLM denso (apelo visual photocard/reveal) · depois B5/P3 CF Pages `deck.gbbragadev.com`.
+- **Next:** L1/B5 ship check static + **P3** CF Pages `deck.gbbragadev.com`.
 
 ## Done (produto)
 | App | Status |
@@ -94,7 +96,7 @@ entra com backend.
 Cards forjados (telemetria simples de evento no client se disponível sem backend;
 senão tráfego CF) + posts/prints marcando a página.
 - **Team:** grok-glm-front · **Status:** running
-- **Job atual:** L1/B2 (4/7) → **DONE**
-- **Branch:** pipeline/anima-deck · checkpoints: 3
-_Atualizado 2026-07-11 (B2) pelo grok-solo. Estado completo: maestro/pipeline.json_
+- **Job atual:** L1/B3 (5/7)
+- **Branch:** pipeline/anima-deck · checkpoints: 4
+_Atualizado 2026-07-11T04:31:45.317Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
 <!-- forge:end -->

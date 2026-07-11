@@ -114,6 +114,7 @@
   border-radius: var(--af-radius-sm);
   background: color-mix(in srgb, var(--af-cyan) 9%, transparent);
   color: var(--af-cyan);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--af-glow-cyan) 55%, transparent);
 }
 
 .af-episode-badge .af-dot {
@@ -137,6 +138,42 @@
   height: 100%;
   width: auto;
   filter: drop-shadow(0 0 22px var(--af-glow));
+  animation: af-reveal 0.5s ease both;
+}
+
+/* sparkles flutuando ao redor do avatar do intro (estética manga) */
+.af-sparkle {
+  position: absolute;
+  color: var(--af-sakura);
+  filter: drop-shadow(0 0 6px var(--af-sakura));
+  animation: af-float 3.6s ease-in-out infinite;
+  z-index: 1;
+}
+.af-sparkle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.af-sparkle--1 {
+  top: 6%;
+  left: 14%;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.2s;
+}
+.af-sparkle--2 {
+  top: 24%;
+  right: 12%;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.1s;
+}
+.af-sparkle--3 {
+  bottom: 18%;
+  left: 22%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 2s;
 }
 
 .af-quiz-intro h2 {
@@ -288,6 +325,15 @@
   color: var(--af-ink);
   cursor: pointer;
   font-size: 13px;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  animation: af-pop 0.26s ease both;
+}
+.af-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--chip, var(--af-primary)) 50%, transparent);
+}
+.af-chip:active {
+  transform: scale(0.96);
 }
 
 .af-chip.on {
@@ -443,6 +489,10 @@
   transform: translateY(-2px);
 }
 
+.af-btn-primary:active {
+  transform: translateY(0);
+}
+
 .af-btn-inline {
   width: auto;
 }
@@ -452,6 +502,10 @@
   background: transparent;
   color: var(--af-ink);
   width: 100%;
+}
+
+.af-btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--af-primary) 45%, transparent);
 }
 
 .af-btn-sm {
@@ -497,6 +551,23 @@
   padding: 48px 16px;
 }
 
+/* flash radial expandindo na revelação — intensidade vem da raridade (--reveal-glow) */
+.af-reveal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 38%, var(--reveal-glow, var(--af-glow)), transparent 62%);
+  opacity: 0;
+  animation: af-reveal-flash 0.9s ease-out both;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.af-reveal > * {
+  position: relative;
+  z-index: 1;
+}
+
 .af-reveal-rarity {
   margin: 8px 0;
   font-family: var(--af-display);
@@ -504,7 +575,7 @@
   line-height: 1;
   letter-spacing: 0.04em;
   animation: af-rarity-pop 0.7s ease both;
-  text-shadow: 0 0 28px var(--pc-glow, var(--af-glow));
+  text-shadow: 0 0 28px var(--reveal-glow, var(--af-glow));
 }
 
 .af-reveal-rarity--common {
@@ -518,9 +589,11 @@
 }
 .af-reveal-rarity--epic {
   color: #c44dff;
+  animation: af-rarity-pop-big 0.8s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 .af-reveal-rarity--legendary {
   color: #fbbf24;
+  animation: af-rarity-pop-big 0.85s cubic-bezier(0.2, 1.5, 0.4, 1) both;
 }
 
 .af-forging {
@@ -545,6 +618,35 @@
   }
 }
 
+/* pop dramático c/ rotação p/ épica/lendária — o pico de hype do app */
+@keyframes af-rarity-pop-big {
+  0% {
+    transform: scale(0.4) rotate(-6deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.14) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes af-reveal-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
 @keyframes af-pulse {
   0%,
   100% {
@@ -555,13 +657,52 @@
   }
 }
 
+/* ===== Keyframes compartilhados (revelação / pop / aura / CRT) ===== */
+@keyframes af-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes af-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes af-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-7px) rotate(10deg);
+  }
+}
+
+@keyframes af-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .af-reveal-rarity,
-  .af-forging,
-  .af-progress-bar,
-  .af-btn-primary {
-    animation: none !important;
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
@@ -586,6 +727,18 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  animation: af-reveal 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* frame interno duplo — profundidade de photocard física */
+.af-photocard::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .af-pc-scan {
@@ -651,6 +804,13 @@
   border-radius: 50%;
   background: #f43f5e;
   box-shadow: 0 0 8px #f43f5e;
+  animation: af-blink 1.4s steps(2, start) infinite;
+}
+
+@keyframes af-blink {
+  to {
+    visibility: hidden;
+  }
 }
 
 .af-pc-rarity-pill {
@@ -673,7 +833,31 @@
   z-index: 1;
 }
 
+/* aura de speed-lines rotativa atrás do avatar (estética manga) */
+.af-pc-avatar-wrap::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 172%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--pc-accent) 50%, transparent) 0deg 0.7deg,
+    transparent 0.7deg 7deg
+  );
+  opacity: 0.4;
+  animation: af-spin 60s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .af-pc-avatar {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: auto;
   filter: drop-shadow(0 0 18px var(--pc-glow));

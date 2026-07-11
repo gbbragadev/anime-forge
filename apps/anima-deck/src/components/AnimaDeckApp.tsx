@@ -9,6 +9,7 @@ import {
   FACES,
   HAIRS,
   PALETTES,
+  RARITY_FRAME,
   RARITY_TABLE,
   emptyDraft,
   forgeCard,
@@ -62,6 +63,12 @@ const SHARE_ICON = (
     <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
     <polyline points="16 6 12 2 8 6" />
     <line x1="12" y1="2" x2="12" y2="15" />
+  </svg>
+);
+
+const SPARKLE_ICON = (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 0 C13 7 17 11 24 12 C17 13 13 17 12 24 C11 17 7 13 0 12 C7 11 11 7 12 0 Z" />
   </svg>
 );
 
@@ -339,6 +346,15 @@ export function AnimaDeckApp({ archetypes, appName, disclaimer, shareHooks }: Pr
             {t("episodeBadge")}
           </span>
           <div className="af-manga-scene">
+            <span className="af-sparkle af-sparkle--1" aria-hidden="true">
+              {SPARKLE_ICON}
+            </span>
+            <span className="af-sparkle af-sparkle--2" aria-hidden="true">
+              {SPARKLE_ICON}
+            </span>
+            <span className="af-sparkle af-sparkle--3" aria-hidden="true">
+              {SPARKLE_ICON}
+            </span>
             <AvatarSvg face="oval" hair="spiky" eyes="glow" palette="sakura" uid="intro" className="af-silhouette" />
           </div>
           <h2>{en ? "Photocard Forge" : "Forja de Photocard"}</h2>
@@ -368,10 +384,16 @@ export function AnimaDeckApp({ archetypes, appName, disclaimer, shareHooks }: Pr
 
   if (phase === "reveal" && card) {
     const rar = RARITY_TABLE.find((r) => r.id === card.rarity)!;
+    const frame = RARITY_FRAME[card.rarity];
     return (
       <>
         {header}
-        <section className="af-panel af-reveal" key={revealTick}>
+        <section
+          className="af-panel af-reveal"
+          key={revealTick}
+          data-rarity={card.rarity}
+          style={{ ["--reveal-glow" as string]: frame.glow }}
+        >
           <p className="af-kicker af-mono-badge">{t("rarityReveal")}</p>
           <h2 className={`af-reveal-rarity af-reveal-rarity--${card.rarity}`}>
             {en ? rar.label.en : rar.label.pt}
