@@ -95,8 +95,9 @@ entra com backend.
 ## Métrica do measure (P4)
 Cards forjados (telemetria simples de evento no client se disponível sem backend;
 senão tráfego CF) + posts/prints marcando a página.
-- **Team:** grok-glm-front · **Status:** running
-- **Job atual:** L1/B3 (5/7)
-- **Branch:** pipeline/anima-deck · checkpoints: 4
-_Atualizado 2026-07-11T04:31:45.317Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
+- **Team:** grok-glm-front · **Status:** paused_gate
+- **Job atual:** L1/B5 (6/7)
+- **Branch:** pipeline/anima-deck · checkpoints: 5
+- **⏸ GATE pendente:** `b3-visual` — UI polida. Preview: http://127.0.0.1:8787/preview/anima-deck/ (ou npm run dev). Aprova o visual? → `forge decide b3-visual go|kill`
+_Atualizado 2026-07-11T04:44:39.884Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
 <!-- forge:end -->

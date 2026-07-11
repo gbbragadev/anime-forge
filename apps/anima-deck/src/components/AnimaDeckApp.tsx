@@ -525,6 +525,7 @@ export function AnimaDeckApp({ archetypes, appName, disclaimer, shareHooks }: Pr
                 hair={draft.hair}
                 eyes={draft.eyes}
                 palette={draft.palette}
+                element={draft.element}
                 uid="wiz"
                 className="af-preview-avatar"
               />
@@ -562,6 +563,7 @@ export function AnimaDeckApp({ archetypes, appName, disclaimer, shareHooks }: Pr
                 hair={draft.hair}
                 eyes={draft.eyes}
                 palette={draft.palette}
+                element={draft.element}
                 uid="pal"
                 className="af-preview-avatar"
               />

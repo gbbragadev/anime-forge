@@ -22,6 +22,7 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 ## Done
 
 - [x] **L1/B3** anima-deck — forge/glm-front (2026-07-11)
+- [x] **L1/B3** anima-deck — forge/glm-front (2026-07-11)
 - [x] **L1/B3** UI polish anima-deck — glm-front (2026-07-11) · photocard aura/REC/reveal WOW escalado por raridade · build PASS
 - [x] **L1/B2** anima-deck — forge/grok-solo (2026-07-11)
 - [x] **L1/B2** anima-deck — forge/grok-solo (2026-07-11) · `content/personas/anima-deck-v1.json` · 12 arquétipos · build PASS

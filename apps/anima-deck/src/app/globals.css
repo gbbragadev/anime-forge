@@ -712,16 +712,16 @@
   aspect-ratio: 9 / 16;
   width: min(100%, 340px);
   margin: 0 auto;
-  padding: 18px 16px 20px;
+  padding: 16px 15px 18px;
   border-radius: 18px;
   border: 2px solid var(--pc-border, var(--af-border));
   background:
-    radial-gradient(ellipse at 50% 20%, color-mix(in srgb, var(--pc-accent) 22%, transparent), transparent 55%),
-    linear-gradient(165deg, #1a1228 0%, #0b0614 70%);
+    radial-gradient(ellipse at 50% 22%, color-mix(in srgb, var(--pc-accent) 26%, transparent), transparent 58%),
+    linear-gradient(165deg, #1a1228 0%, #0b0614 72%);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 12px 40px rgba(0, 0, 0, 0.45),
-    0 0 36px var(--pc-glow, transparent);
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 38px var(--pc-glow, transparent);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -735,55 +735,123 @@
   content: "";
   position: absolute;
   inset: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 14px;
   pointer-events: none;
+  z-index: 3;
+}
+
+/* god rays — feixes de luz do topo (cinematográfico) */
+.af-pc-godrays {
+  position: absolute;
+  top: -12%;
+  left: -25%;
+  right: -25%;
+  height: 72%;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 200deg at 50% 0%,
+    color-mix(in srgb, var(--pc-accent) 40%, transparent) 0deg 1.1deg,
+    transparent 1.1deg 9deg
+  );
+  -webkit-mask: linear-gradient(to bottom, #000 0%, transparent 80%);
+  mask: linear-gradient(to bottom, #000 0%, transparent 80%);
+  opacity: 0.5;
+}
+
+/* vignette — focaliza o centro, escurece as bordas */
+.af-pc-vignette {
+  position: absolute;
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(120% 92% at 50% 40%, transparent 58%, rgba(5, 2, 10, 0.4) 100%);
+}
+
+/* holofoil iridescente — o "premium" da photocard (opacity por raridade) */
+.af-pc-holofoil {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    transparent 28%,
+    rgba(255, 183, 213, 0.18) 38%,
+    rgba(34, 211, 238, 0.18) 48%,
+    rgba(196, 77, 255, 0.18) 58%,
+    rgba(52, 211, 153, 0.16) 68%,
+    transparent 78%
+  );
+  background-size: 280% 280%;
+  animation: af-holofoil 7s ease-in-out infinite;
+  opacity: var(--pc-holo, 0.25);
+}
+.af-photocard--legendary { --pc-holo: 0.6; }
+.af-photocard--epic { --pc-holo: 0.46; }
+.af-photocard--rare { --pc-holo: 0.32; }
+.af-photocard--uncommon { --pc-holo: 0.22; }
+.af-photocard--common { --pc-holo: 0.12; }
+
+@keyframes af-holofoil {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
 }
 
 .af-pc-scan {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
   background: repeating-linear-gradient(
     to bottom,
     transparent 0 2px,
-    rgba(255, 255, 255, 0.03) 2px 3px
+    rgba(255, 255, 255, 0.035) 2px 3px
   );
   opacity: 0.7;
 }
 
 .af-corner {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border: 2px solid var(--pc-accent, var(--af-cyan));
-  opacity: 0.75;
-  z-index: 2;
+  opacity: 0.8;
+  z-index: 4;
 }
 .af-corner-tl {
   top: 10px;
   left: 10px;
   border-right: 0;
   border-bottom: 0;
+  border-top-left-radius: 4px;
 }
 .af-corner-tr {
   top: 10px;
   right: 10px;
   border-left: 0;
   border-bottom: 0;
+  border-top-right-radius: 4px;
 }
 .af-corner-bl {
   bottom: 10px;
   left: 10px;
   border-right: 0;
   border-top: 0;
+  border-bottom-left-radius: 4px;
 }
 .af-corner-br {
   bottom: 10px;
   right: 10px;
   border-left: 0;
   border-top: 0;
+  border-bottom-right-radius: 4px;
 }
 
 .af-rec {
@@ -794,7 +862,7 @@
   align-items: center;
   gap: 6px;
   color: #fda4af;
-  z-index: 2;
+  z-index: 5;
   font-size: 10px;
 }
 
@@ -813,158 +881,240 @@
   }
 }
 
+/* header: kicker + glifo elemental */
+.af-pc-header {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 6px;
+}
+.af-pc-header .af-kicker {
+  margin: 0;
+  color: var(--pc-accent);
+  opacity: 0.92;
+}
+.af-pc-glyph {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  filter: drop-shadow(0 0 6px var(--pc-element));
+}
+
+/* raridade + estrelas */
+.af-pc-rarity-row {
+  position: relative;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
 .af-pc-rarity-pill {
   font-family: var(--af-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid var(--pc-border);
   color: var(--pc-accent);
-  margin-bottom: 8px;
-  z-index: 1;
+  background: color-mix(in srgb, var(--pc-accent) 10%, transparent);
+}
+.af-pc-stars {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--pc-accent);
+  text-shadow: 0 0 8px var(--pc-glow);
+  line-height: 1;
+}
+.af-pc-stars-off {
+  color: rgba(255, 255, 255, 0.18);
+  text-shadow: none;
 }
 
-.af-pc-avatar-wrap {
+/* palco do personagem: sigilo + spotlight + avatar + monograma */
+.af-pc-stage {
   position: relative;
-  width: 58%;
-  margin: 4px 0 8px;
-  z-index: 1;
+  z-index: 5;
+  width: 66%;
+  margin: 2px 0 6px;
+  aspect-ratio: 140 / 180;
+  display: grid;
+  place-items: center;
 }
-
-/* aura de speed-lines rotativa atrás do avatar (estética manga) */
-.af-pc-avatar-wrap::before {
-  content: "";
+.af-pc-spotlight {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 172%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  overflow: hidden;
-  background: repeating-conic-gradient(
-    from 0deg,
-    color-mix(in srgb, var(--pc-accent) 50%, transparent) 0deg 0.7deg,
-    transparent 0.7deg 7deg
-  );
-  opacity: 0.4;
-  animation: af-spin 60s linear infinite;
+  inset: -16% -8% -4%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pc-element) 46%, transparent), transparent 72%);
+  filter: blur(2px);
   z-index: 0;
   pointer-events: none;
 }
-
+.af-pc-back-sigil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.af-pc-back-sigil .af-pc-sigil {
+  width: 80%;
+  height: 80%;
+  filter: drop-shadow(0 0 10px var(--pc-glow));
+  animation: af-spin 90s linear infinite;
+}
 .af-pc-avatar {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: auto;
-  filter: drop-shadow(0 0 18px var(--pc-glow));
+  height: 100%;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
 }
-
 .af-pc-monogram {
   position: absolute;
-  right: -4px;
-  bottom: 8px;
-  width: 40px;
-  height: 40px;
+  right: -6px;
+  bottom: 4%;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   display: grid;
   place-items: center;
   font-family: var(--af-display);
-  font-size: 18px;
+  font-size: 17px;
   color: #120a1f;
   background: linear-gradient(135deg, var(--pc-accent), #ff4d9a);
-  box-shadow: 0 4px 16px var(--pc-glow);
+  box-shadow: 0 0 0 2px var(--af-bg), 0 4px 14px var(--pc-glow);
+  z-index: 2;
 }
 
-.af-pc-name {
-  margin: 0 0 10px;
-  font-family: var(--af-display);
-  font-size: clamp(1.6rem, 7vw, 2.1rem);
-  letter-spacing: 0.02em;
-  line-height: 1;
-  z-index: 1;
-}
-
-.af-pc-meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+/* identidade */
+.af-pc-identity {
+  position: relative;
+  z-index: 5;
   width: 100%;
-  margin: 0 0 10px;
-  z-index: 1;
+  text-align: center;
 }
-
-.af-pc-meta div {
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(11, 6, 20, 0.55);
-  border: 1px solid var(--af-border);
-}
-
-.af-pc-meta dt {
-  font-family: var(--af-mono);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--af-muted);
-  margin: 0 0 2px;
-}
-
-.af-pc-meta dd {
+.af-pc-name {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--af-display);
+  font-size: clamp(1.7rem, 8vw, 2.3rem);
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  color: #fff;
+  text-shadow:
+    0 0 18px var(--pc-glow),
+    0 2px 0 color-mix(in srgb, var(--pc-accent) 55%, transparent);
+}
+.af-pc-subtitle {
+  margin: 5px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--af-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--af-ink);
+  opacity: 0.92;
+}
+.af-pc-el-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.af-pc-dot-sep {
+  opacity: 0.4;
 }
 
-.af-pc-power {
-  margin: 0 0 6px;
-  font-size: 13px;
-  z-index: 1;
+/* stats: tier bar + poder + frase */
+.af-pc-stats {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0 2px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
-
-.af-pc-power .af-mono-badge {
-  color: var(--af-cyan);
+.af-pc-tier {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(11, 6, 20, 0.7);
+  border: 1px solid var(--af-border);
+  overflow: hidden;
 }
-
-.af-pc-phrase {
-  margin: 0 0 auto;
+.af-pc-tier-fill {
+  display: block;
+  height: 100%;
+  width: var(--pc-tier, 70%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pc-accent), #ff4d9a, var(--pc-element));
+  box-shadow: 0 0 10px var(--pc-glow);
+}
+.af-pc-power {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
   font-size: 13px;
+}
+.af-pc-power .af-mono-badge {
+  color: var(--pc-accent);
+  opacity: 0.9;
+  flex: none;
+}
+.af-pc-power-val {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+}
+.af-pc-tier-num {
+  flex: none;
+  color: var(--pc-accent);
+}
+.af-pc-phrase {
+  margin: 0 auto;
+  font-size: 12.5px;
   font-style: italic;
   color: var(--af-sakura);
   line-height: 1.35;
-  max-width: 28ch;
-  z-index: 1;
+  max-width: 30ch;
 }
 
 .af-timestamp {
+  position: relative;
+  z-index: 5;
   margin: 12px 0 4px;
   font-size: 10px;
   color: var(--af-muted);
-  z-index: 1;
 }
 
 .af-watermark {
+  position: relative;
+  z-index: 5;
   margin: 0;
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--af-muted);
   opacity: 0.75;
-  z-index: 1;
 }
 
 .af-pc-seal {
+  position: relative;
+  z-index: 5;
   margin: 6px 0 0;
   font-family: var(--af-mono);
   font-size: 10px;
   color: var(--af-muted);
-  z-index: 1;
 }
 
 .af-btn-primary svg {
