@@ -22,6 +22,8 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Done
 
+- [x] **L1/B2** anima-deck — forge/grok-solo (2026-07-11)
+- [x] **L1/B2** anima-deck — forge/grok-solo (2026-07-11) · `content/personas/anima-deck-v1.json` · 12 arquétipos · build PASS
 - [x] **L1/B1** anima-deck — forge/grok-solo (2026-07-11)
 - [x] **L1/B1** Scaffold anima-deck — grok-solo (2026-07-11) · `apps/anima-deck` · build PASS
 - [x] **L0/P1** anima-deck — forge/grok-solo (2026-07-11)
