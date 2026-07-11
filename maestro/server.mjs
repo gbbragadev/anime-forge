@@ -744,6 +744,20 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Templates do kit IG (marketing/ig-kit): /ig-kit/<arquivo>?params
+  if (url.pathname.startsWith("/ig-kit/")) {
+    const kitDir = path.join(ROOT, "marketing", "ig-kit");
+    const f = path.resolve(kitDir, "." + url.pathname.slice("/ig-kit".length));
+    if (insideDir(kitDir, f) && fs.existsSync(f) && fs.statSync(f).isFile()) {
+      res.writeHead(200, { "Content-Type": contentType(f) });
+      fs.createReadStream(f).pipe(res);
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+    return;
+  }
+
   // Preview estático do app buildado (gate visual pós-B3): /preview/<appId>/...
   if (url.pathname.startsWith("/preview/")) {
     const parts = url.pathname.split("/").filter(Boolean);

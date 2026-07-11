@@ -151,7 +151,8 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   const deployCmd = `npx --yes wrangler@latest pages deploy apps/${appId}/out --project-name ${appId} --commit-dirty=true`;
   const deployRes = run(deployCmd, wranglerEnv, 5 * 60 * 1000, root);
 
-  if (!deployRes.ok) {
+  let deployed = deployRes.ok;
+  if (!deployed) {
     const errText = `${deployRes.error || ""} ${deployRes.tail || ""}`;
     // Tenta criar projeto Pages
     if (/no project|not found|does not exist/i.test(errText)) {
@@ -182,6 +183,7 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
           ],
         };
       }
+      deployed = true; // criou + deployou — segue pro custom domain
     } else if (/403|unauthorized|authentication error|code:\s*10000|invalid.*token|read.?only/i.test(errText)) {
       return {
         ok: false,
@@ -193,15 +195,17 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
         ],
       };
     }
-    return {
-      ok: false,
-      error: `wrangler deploy falhou: ${deployRes.error}`,
-      fallbackSteps: [
-        `1. Rode manualmente: npx wrangler pages deploy apps/${appId}/out --project-name ${appId}`,
-        `2. No dash do Pages, adicione o custom domain ${deploy.subdomain}.gbbragadev.com`,
-        `3. forge decide <gate> retry quando o site responder`,
-      ],
-    };
+    if (!deployed) {
+      return {
+        ok: false,
+        error: `wrangler deploy falhou: ${deployRes.error}`,
+        fallbackSteps: [
+          `1. Rode manualmente: npx wrangler pages deploy apps/${appId}/out --project-name ${appId}`,
+          `2. No dash do Pages, adicione o custom domain ${deploy.subdomain}.gbbragadev.com`,
+          `3. forge decide <gate> retry quando o site responder`,
+        ],
+      };
+    }
   }
 
   log(`✓ deployed to Pages`);
