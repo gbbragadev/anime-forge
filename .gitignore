@@ -36,3 +36,6 @@ ideas/
 !apps/hub/
 !apps/hub/out/
 !apps/hub/out/index.html
+
+# scratch da skill ground-first
+.ground-first/
