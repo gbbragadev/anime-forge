@@ -395,6 +395,9 @@ async function wizard() {
       out.push(row(fg(CYAN, `  ${st.idea}▌`)));
       out.push(blank());
       out.push(row(dim("  ex.: quiz de openings de anime · gerador de photocard · fanfic interativa")));
+      out.push(blank());
+      out.push(row(dim("  ideia grande/detalhada? escreva num .md e rode:")));
+      out.push(row(dim("  forge new --idea-file minha-ideia.md   (quanto mais contexto, melhor o app)")));
     } else if (st.step === 1) {
       out.push(row(bold("Quem toca? (setup de agentes)")));
       out.push(blank());
@@ -448,7 +451,7 @@ async function wizard() {
           if (st.idea.trim().length >= 6) st.step = 1;
           else st.err = "escreve a ideia (mínimo 6 caracteres)";
         } else if (key.name === "backspace") st.idea = st.idea.slice(0, -1);
-        else if (str && !key.ctrl && str >= " " && st.idea.length < 200) st.idea += str;
+        else if (str && !key.ctrl && str >= " " && st.idea.length < 600) st.idea += str;
       } else if (st.step === 1) {
         if (key.name === "up") st.teamIdx = (st.teamIdx + teams.length - 1) % teams.length;
         else if (key.name === "down") st.teamIdx = (st.teamIdx + 1) % teams.length;
@@ -511,6 +514,8 @@ ${bold(fg(PURPLE, "🎼 forge"))} — Maestro Autopilot (anime-forge)
   ${bold("forge")}           tela de setup interativa (ideia → time → tipo → RUN)
   ${bold("forge new")} "<ideia>" [--team X] [--app-id X] [--capability static|quiz|chat]
             [--subdomain X] [--target cf-pages|vercel] [--dry-run]
+  ${bold("forge new --idea-file")} ideia.md   ideia GRANDE/estruturada (markdown multi-linha —
+            vai inteira pro prompt de todos os jobs; mais contexto = app melhor)
   ${bold("forge feedback")} <app> "<feedback geral>" [--team X] [--dry-run]
             loop de melhoria: aplica seu feedback no app pronto e redeploya
   ${bold("forge attach")}    TUI ao vivo da pipeline
@@ -526,7 +531,12 @@ Teams: grok-solo (default) · grok-glm-front · quality · dry-run
   }
 
   if (cmd === "new") {
-    const idea = rest.join(" ").trim();
+    // ideia grande/estruturada: forge new --idea-file ideia.md (markdown livre, multi-linha)
+    let idea = rest.join(" ").trim();
+    if (flags.ideaFile) {
+      idea = fs.readFileSync(path.resolve(flags.ideaFile), "utf8").trim();
+      if (!idea) throw new Error(`arquivo de ideia vazio: ${flags.ideaFile}`);
+    }
     if (!idea) return wizard();
     await ensureServer();
     const r = await api("/api/pipeline/start", {
