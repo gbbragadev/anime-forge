@@ -5,6 +5,7 @@ Uma linha = uma **iteração** de loop. Limpar ao terminar.
 | slot | agent | loop | job | app / area | since | notes |
 |------|-------|------|-----|------------|-------|-------|
 | — | — | — | — | — | — | livre |
+| | | | | | | |
 
 ## Protocolo
 
