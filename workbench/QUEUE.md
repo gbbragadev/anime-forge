@@ -15,10 +15,13 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Doing
 
-_(vazio)_
+- [ ] **L0/P1** Content hooks anima-deck — forge autopilot (após P0 GO)
 
 ## Done
 
+
+- [x] **L0/P0** anima-deck — forge/grok-solo (2026-07-11)
+- [x] **L0/P0** Scorecard anima-deck **GO** (content-first) (2026-07-11)
 - [x] **Meta** Pipeline/loops upgrade (lições B1/B3/GLM/ship) (2026-07-10)
 - [x] **Ship** commit + push + GitHub Pages anime-quiz (2026-07-10)
 - [x] **L1/B5** Ship check anime-quiz (2026-07-10)

@@ -1,54 +1,49 @@
 # HANDOFF
 
 ## Loop ativo
-**Standby entre produtos** — anime-quiz **shipped**; harness estável; **Forge Autopilot PRONTO**
-— próxima aposta = `forge new "<ideia>"` (pipeline automática, você só decide gates)
+**L0 Product — anima-deck** · P0 scorecard **GO** (content-first)
 
 ## Last agent
-claude (Fable) | 2026-07-10
+grok-solo | 2026-07-11 | L0/P0 anima-deck
 
-## Handoff canônico (ideia + o que foi feito)
-**Ler primeiro:** `docs/HANDOFF-SESSAO.md` · **Autopilot:** `docs/MAESTRO.md` § Forge Autopilot
-
-## Last iteration — FORGE AUTOPILOT (2026-07-10)
-- **Motor**: `maestro/engine.mjs` — pipeline ideia→P0→gate→P1→B1..B5→gate→ship com git
-  checkpoints/rollback, retry ≤3, L2 automático em rate-limit (cooldown+fallback do team)
-- **CLI**: `npm run forge -- new "<ideia>" --team grok-glm-front` → TUI full-screen
-  (gates com teclas g/k/r/f); `forge decide|status|attach|stop|resume|roster`
-- **Teams**: grok-solo · grok-glm-front (GLM headless no B3 — fim do copiar prompt) ·
-  quality (Opus+Codex review) · dry-run
-- **Fix histórico**: Grok headless = `grok -p` (posicional abria TUI → hang/ANSI). Smokes
-  reais PASS: GLM-FORGE-OK, GROK-ADAPTER-OK. Dry-run E2E 2× PASS.
-- **Deploy**: cf-pages → `<app>.gbbragadev.com` implementado; ⚠ CLOUDFLARE_API_TOKEN é
-  read-only → gate entrega 3 passos p/ trocar por token com Pages:Edit + DNS:Edit
+## Last iteration — L0/P0 anima-deck (2026-07-11)
+- Scorecard salvo: `docs/scorecard-anima-deck.md` → **GO** (condicionado a content-first + escopo v0 fechado).
+- Capability efetiva: **static** (zero API); reusa shell/card do anime-quiz + ARCANA; avatar SVG paramétrico = FE novo, sem capability `image`.
+- **Next:** L0/P1 hooks → `docs/content-hooks-anima-deck.md`. Não B1 até P1 (ou “pode decidir e seguir”).
 
 ## Done (produto)
 | App | Status |
 |-----|--------|
 | **waifu-chat** | MVP + smoke OpenRouter + UI B3 GLM |
 | **anime-quiz** | P0→B5 + **live** https://gbbragadev.github.io/anime-forge/ |
+| **anima-deck** | P0 **GO** — aguarda P1 |
 
 ## Done (harness)
-- Loops L0/L1/L2 multi-sub (Claude/Codex/Grok/Gemini + GLM B3)
+- Loops L0/L1/L2 multi-sub + Forge Autopilot (maestro)
 - workbench QUEUE/HANDOFF/CLAIMS
-- Guia visual, PLAYBOOK, ship matrix, content-first gates
-- OpenRouter: `OPEN_ROUTER_API_KEY` env sistema (não pedir no chat)
+- Guia visual, PLAYBOOK, ship matrix
 
 ## Next
-1. **E2E real do autopilot**: `npm run forge -- new "<ideia nova>" --team grok-glm-front`
-   e decidir os 3 gates (P0 GO/KILL · visual pós-B3 · deploy)
-2. **Humano P4** anime-quiz: hooks + bio → URL Pages (5–7d) — `docs/content-hooks-anime-quiz.md`
-3. **Token Cloudflare**: trocar p/ Pages:Edit + DNS:Edit → deploy automático em
-   `<app>.gbbragadev.com` (sem isso, gate de deploy dá passos manuais)
+1. **L0/P1** anima-deck — 15 content hooks + CTA (página @otaku_sincero69)
+2. Gate humano / measure depois do ship; P4 = cards forjados + posts
+3. E2E autopilot / token CF (Pages:Edit) se for deploy automático em deck.gbbragadev.com
 
 ## Blockers
 - P4 measure = humano
-- Deploy automático cf-pages = token CF read-only (3 passos no gate)
-- Vercel server deploy = token
+- Deploy automático cf-pages = token CF pode ser read-only
+- L1/B1 anima-deck bloqueado até P1 (default)
 
 ## Links
-- Handoff sessão: `docs/HANDOFF-SESSAO.md`
-- Quiz: https://gbbragadev.github.io/anime-forge/
-- Repo: https://github.com/gbbragadev/anime-forge
+- Scorecard: `docs/scorecard-anima-deck.md`
+- Master (roadmap, não v0): `ideas/anima-deck-master.md`
+- Quiz live: https://gbbragadev.github.io/anime-forge/
 - Pipeline: `docs/AGENT-PIPELINE.md`
-- Trocar ideia: `docs/PLAYBOOK.md` + `docs/prompts/L0-NOVA-IDEIA.md`
+
+<!-- forge:begin -->
+## Forge autopilot — anima-deck
+- **Ideia:** ANIMA//DECK v0 — Photocard Forge (static, criar → forjar → share)
+- **Team:** grok-glm-front · **Status:** P0 done → próximo P1
+- **Job atual:** L0/P0 **GO** · scorecard `docs/scorecard-anima-deck.md`
+- **Branch:** pipeline/anima-deck
+_Atualizado 2026-07-11 pelo grok-solo (L0/P0)._
+<!-- forge:end -->
