@@ -24,6 +24,7 @@ const JOB_TEMPLATES = {
   "L1/B3": "L1-B3-ui-polish.md",
   "L1/B4": "L1-B4-wire-api.md",
   "L1/B5": "L1-B5-ship-check.md",
+  ITERATE: "FEEDBACK-ITERATE.md",
 };
 
 const JOBS_BY_CAPABILITY = {
@@ -51,6 +52,12 @@ const GATES_AFTER = {
     prompt: `Ship check OK. Autorizar push/merge em master + deploy ${p.deploy.target} → https://${p.deploy.subdomain}.gbbragadev.com ?`,
     payload: `deploy:${p.deploy.target}:${p.deploy.subdomain}`,
     choices: ["go", "kill"],
+  }),
+  ITERATE: (p) => ({
+    id: "iterate-visual",
+    prompt: `Feedback aplicado. Preview: http://127.0.0.1:8787/preview/${p.appId}/ (ou npm run dev). Aprova a iteração?`,
+    payload: `preview:${p.appId}`,
+    choices: ["go", "retry", "kill"],
   }),
 };
 
@@ -112,7 +119,10 @@ export function createEngine({ root, emitLog, emitPipeline }) {
     const roster = readRoster();
     const team = roster.teams?.[pipeline.team];
     if (!team) throw new Error(`team "${pipeline.team}" não existe no roster`);
-    const primaryId = team.dispatch[job] || team.dispatch.default;
+    const primaryId =
+      team.dispatch[job] ||
+      (job === "ITERATE" ? team.dispatch["L1/B3"] : null) || // feedback é tipicamente visual → player de front
+      team.dispatch.default;
     const chain = [primaryId, ...(team.fallbacks?.[primaryId] || [])];
     const now = Date.now();
     for (const id of chain) {
@@ -153,6 +163,13 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       `- Critério de sucesso (verificado pelo orquestrador): ${verifyDescription(job)}.`,
       pipelineFooter(),
     ];
+    if (p.mode === "feedback" && job === "ITERATE") {
+      lines.push(
+        "",
+        "FEEDBACK GERAL DO DONO (fonte da verdade desta iteração — aplique com prioridade máxima):",
+        `"""${p.feedbackText}"""`
+      );
+    }
     const prev = p.history.filter((h) => h.pass).slice(-1)[0];
     if (prev) lines.splice(6, 0, `Job anterior concluído: ${prev.job} por ${prev.playerId}.`);
     if (attempt > 1) {
@@ -578,6 +595,7 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       runId: new Date().toISOString().replace(/[:.]/g, "-"),
       appId,
       idea,
+      mode: "auto",
       team,
       capability,
       dryRun,
@@ -605,6 +623,95 @@ export function createEngine({ root, emitLog, emitPipeline }) {
     return snapshot();
   }
 
+  /** static (output: "export") → cf-pages · senão app server → vercel */
+  function detectCapability(appId) {
+    for (const f of ["next.config.ts", "next.config.mjs", "next.config.js"]) {
+      try {
+        const cfg = fs.readFileSync(path.join(root, "apps", appId, f), "utf8");
+        return /output:\s*["']export["']/.test(cfg) ? "static" : "chat";
+      } catch {}
+    }
+    return "static";
+  }
+
+  /** reusa o deploy da última pipeline arquivada deste app (se houver) */
+  function lastDeployFor(appId) {
+    try {
+      const files = fs
+        .readdirSync(RUNS_DIR)
+        .filter((f) => f.startsWith("pipeline-") && f.endsWith(".json"))
+        .sort()
+        .reverse();
+      for (const f of files) {
+        const p = JSON.parse(fs.readFileSync(path.join(RUNS_DIR, f), "utf8"));
+        if (p.appId === appId && p.deploy) return p.deploy;
+      }
+    } catch {}
+    return null;
+  }
+
+  /** Loop de melhoria: feedback geral do dono → ITERATE → gate visual → B5 → gate deploy → redeploy */
+  function startFeedback(params) {
+    if (pipeline && ["running", "paused_gate", "blocked"].includes(pipeline.status)) {
+      throw new Error(`já existe pipeline ativa (${pipeline.appId} · ${pipeline.status}) — forge stop ou decide antes`);
+    }
+    const appId = slugify(params.appId || "");
+    if (!appId || !fs.existsSync(path.join(root, "apps", appId))) {
+      throw new Error(`app "${params.appId}" não existe em apps/ — forge feedback <app> "<texto>"`);
+    }
+    const feedbackText = String(params.feedbackText || "").trim();
+    if (feedbackText.length < 8) throw new Error("feedback vazio ou curto demais");
+    const roster = readRoster();
+    const team = params.team || (roster.teams?.["grok-glm-front"] ? "grok-glm-front" : "grok-solo");
+    if (!roster.teams?.[team]) {
+      throw new Error(`team "${team}" não existe — disponíveis: ${Object.keys(roster.teams || {}).join(", ")}`);
+    }
+    const dryRun = !!params.dryRun || team === "dry-run";
+
+    ensureCleanTree();
+    const baseRef = git(["rev-parse", "HEAD"]);
+    let n = 1;
+    while (git(["branch", "--list", `pipeline/${appId}-fb${n}`])) n++;
+    const branch = `pipeline/${appId}-fb${n}`;
+    git(["checkout", "-b", branch]);
+
+    const capability = detectCapability(appId);
+    const prevDeploy = lastDeployFor(appId);
+    pipeline = {
+      runId: new Date().toISOString().replace(/[:.]/g, "-"),
+      appId,
+      idea: `feedback fb${n}: ${feedbackText.slice(0, 120)}`,
+      mode: "feedback",
+      feedbackText,
+      iterationNum: n,
+      team,
+      capability,
+      dryRun,
+      status: "running",
+      jobs: ["ITERATE", "L1/B5", "P3"],
+      jobIndex: 0,
+      currentJob: null,
+      git: { branch, baseRef, checkpoints: [], lastCheckpoint: baseRef },
+      gates: [],
+      history: [],
+      cooldowns: {},
+      deploy: {
+        target: params.target || prevDeploy?.target || (capability === "chat" ? "vercel" : "cf-pages"),
+        subdomain: slugify(params.subdomain || prevDeploy?.subdomain || appId),
+        url: null,
+        dns: { status: "pending" },
+      },
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+    };
+    log(`🔁 forge feedback · app=${appId} · fb${n} · team=${team}${dryRun ? " · DRY-RUN" : ""}`);
+    log(`   "${feedbackText.slice(0, 140)}"`);
+    workbench.handoffUpdate(paths, pipeline);
+    save();
+    advanceLoop();
+    return snapshot();
+  }
+
   function decide(gateId, choice, feedback) {
     if (!pipeline) throw new Error("nenhuma pipeline ativa");
     const gate = pipeline.gates.find((g) => g.id === gateId && !g.decision);
@@ -621,9 +728,11 @@ export function createEngine({ root, emitLog, emitPipeline }) {
       return snapshot();
     }
     if (choice === "retry") {
-      if (gate.id === "b3-visual") {
-        pipeline.jobIndex = pipeline.jobs.indexOf("L1/B3");
-      } else if (gate.id.startsWith("blocked-")) {
+      // volta pro job que originou o gate (b3-visual→B3, iterate-visual→ITERATE, blocked-*→o próprio)
+      if (gate.afterJob && pipeline.jobs.includes(gate.afterJob)) {
+        pipeline.jobIndex = pipeline.jobs.indexOf(gate.afterJob);
+      }
+      if (gate.id.startsWith("blocked-")) {
         pipeline.history = pipeline.history.map((h) => (h.job === gate.afterJob ? { ...h, superseded: true } : h));
       }
       pipeline.pendingFeedback = feedback || null;
@@ -695,5 +804,5 @@ export function createEngine({ root, emitLog, emitPipeline }) {
     } catch {}
   }
 
-  return { start, decide, stop, resume, snapshot };
+  return { start, startFeedback, decide, stop, resume, snapshot };
 }

@@ -511,6 +511,8 @@ ${bold(fg(PURPLE, "🎼 forge"))} — Maestro Autopilot (anime-forge)
   ${bold("forge")}           tela de setup interativa (ideia → time → tipo → RUN)
   ${bold("forge new")} "<ideia>" [--team X] [--app-id X] [--capability static|quiz|chat]
             [--subdomain X] [--target cf-pages|vercel] [--dry-run]
+  ${bold("forge feedback")} <app> "<feedback geral>" [--team X] [--dry-run]
+            loop de melhoria: aplica seu feedback no app pronto e redeploya
   ${bold("forge attach")}    TUI ao vivo da pipeline
   ${bold("forge status")}    snapshot rápido
   ${bold("forge decide")} <gate> <go|kill|retry> [feedback…]
@@ -537,6 +539,24 @@ Teams: grok-solo (default) · grok-glm-front · quality · dry-run
       dryRun: flags.dryRun,
     });
     console.log(fg(GREEN, `✓ pipeline iniciada: ${r.pipeline.appId} · team ${r.pipeline.team}`));
+    await attachTUI();
+    return;
+  }
+
+  if (cmd === "feedback") {
+    const [appId, ...fb] = rest;
+    const feedbackText = fb.join(" ").trim();
+    if (!appId || !feedbackText) throw new Error('uso: forge feedback <app> "<feedback geral>" [--team X] [--dry-run]');
+    await ensureServer();
+    const r = await api("/api/pipeline/feedback", {
+      appId,
+      feedbackText,
+      team: flags.team,
+      subdomain: flags.subdomain,
+      target: flags.target,
+      dryRun: flags.dryRun,
+    });
+    console.log(fg(GREEN, `🔁 iteração de feedback iniciada: ${r.pipeline.appId} (fb${r.pipeline.iterationNum}) · team ${r.pipeline.team}`));
     await attachTUI();
     return;
   }

@@ -706,6 +706,8 @@ const server = http.createServer(async (req, res) => {
       const action = url.pathname.split("/").pop();
       if (action === "start") {
         sendJson(res, 200, { ok: true, pipeline: engine.start(body) });
+      } else if (action === "feedback") {
+        sendJson(res, 200, { ok: true, pipeline: engine.startFeedback(body) });
       } else if (action === "decide") {
         sendJson(res, 200, { ok: true, pipeline: engine.decide(body.gateId, body.choice, body.feedback) });
       } else if (action === "stop") {
