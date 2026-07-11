@@ -405,11 +405,56 @@
       transform: translateY(-2px);
     }
 
+    .intro-toggle {
+      display: inline-flex;
+      gap: 0;
+      border: 1px solid var(--af-border);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--af-surface-2) 40%, transparent);
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .toggle-btn {
+      padding: 4px 10px;
+      border: 0;
+      background: transparent;
+      color: var(--af-muted);
+      cursor: pointer;
+      transition: color 140ms ease, background 140ms ease;
+    }
+
+    .toggle-btn.active {
+      background: color-mix(in srgb, var(--af-primary) 25%, transparent);
+      color: var(--af-ink);
+    }
+
+    .intro-seal-small {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border: 1px solid color-mix(in srgb, var(--af-primary) 35%, transparent);
+      border-radius: 3px;
+      color: var(--af-muted);
+      background: color-mix(in srgb, var(--af-primary) 5%, transparent);
+      margin-top: 8px;
+    }
+
     /* ---- RESULT Screen ---- */
     .screen-result {
       align-items: center;
-      justify-content: center;
-      padding: 32px 16px;
+      justify-content: flex-start;
+      padding: 24px 16px 32px;
+      gap: 12px;
+    }
+
+    .result-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
     }
 
     .result-card {
@@ -645,6 +690,20 @@
     <h1>SINARA</h1>
     <p class="tagline">Seus arquétipos em neon</p>
     <div class="seal">by @otaku_sincero69</div>
+
+    <div style="margin-top: 32px; font-size: 0.9rem; color: var(--af-muted); border-top: 1px solid var(--af-border); padding-top: 24px;">
+      <div style="color: var(--af-muted); font-size: 0.85rem; letter-spacing: 0.02em; margin-bottom: 12px; font-weight: 600;">Alternativas discretas</div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+        <div>
+          <strong style="color: var(--af-sakura); font-family: var(--af-display); font-size: 1.2rem;">ARCO</strong>
+          <div style="font-size: 0.8rem; margin-top: 4px;">Arc — story narrative</div>
+        </div>
+        <div>
+          <strong style="color: var(--af-sakura); font-family: var(--af-display); font-size: 1.2rem;">AURA</strong>
+          <div style="font-size: 0.8rem; margin-top: 4px;">Energy / Vibe essence</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== MAIN CONTENT ===== -->
@@ -695,7 +754,7 @@
           <div class="swatch">
             <div class="swatch-color" style="--color: #a89bc0;"></div>
             <div class="swatch-info">
-              <div class="swatch-name">Mutcido</div>
+              <div class="swatch-name">Apagado</div>
               <div class="swatch-hex">#a89bc0</div>
             </div>
           </div>
@@ -769,9 +828,15 @@
           <div class="mockup-label">INTRO — Começo do Arco</div>
           <div class="phone-frame">
             <div class="phone-screen screen-intro">
-              <div class="intro-badge">
-                <span class="intro-dot"></span>
-                EP. 01 · QUIZ
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%;">
+                <div class="intro-badge">
+                  <span class="intro-dot"></span>
+                  EP. 01 · QUIZ
+                </div>
+                <div class="intro-toggle">
+                  <button class="toggle-btn active">PT</button>
+                  <button class="toggle-btn">EN</button>
+                </div>
               </div>
 
               <svg viewBox="0 0 140 180" style="width: 80px; height: 100px; margin: 0 auto;">
@@ -820,6 +885,7 @@
               </div>
 
               <button class="intro-btn">Começar o arco</button>
+              <div class="intro-seal-small">by @otaku_sincero69</div>
             </div>
           </div>
         </div>
@@ -829,6 +895,7 @@
           <div class="mockup-label">RESULT — Card Compartilhável</div>
           <div class="phone-frame">
             <div class="phone-screen screen-result">
+              <div class="result-wrapper">
               <div class="result-card" style="--result-accent: #a78bfa;">
                 <span class="corner corner-tl"></span>
                 <span class="corner corner-tr"></span>
@@ -852,6 +919,16 @@
 
                 <p class="result-watermark">SINARA · ARQUÉTIPOS</p>
               </div>
+
+              <button class="intro-btn" style="width: auto; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+                Compartilhar
+              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -865,7 +942,7 @@
       <div class="rationale">
         <div class="rationale-item">
           <strong>Neon Intencional</strong>
-          <p>Rosa + roxo graduado sobre preto quase-absoluto cria espaço visual brutal, legível em Stories/TikTok. Glow usado donde é sinal (auras de resultado, badges de episódio), não em tudo — economia = impacto.</p>
+          <p>Rosa + roxo graduado sobre preto quase-absoluto cria espaço visual brutal, legível em Stories/TikTok. Glow usado onde é sinal (auras de resultado, badges de episódio), não em tudo — economia = impacto.</p>
         </div>
         <div class="rationale-item">
           <strong>Tipografia Otaku BR</strong>
@@ -877,7 +954,7 @@
         </div>
         <div class="rationale-item">
           <strong>Marca Secundária Leve</strong>
-          <p>"By @otaku_sincero69" é selo, não poluição. SINARA é face dos apps, instagram é ecosistema. Dois níveis de marca = tráfego cruzado sem conflito de identidade.</p>
+          <p>"By @otaku_sincero69" é selo, não poluição. SINARA é face dos apps, instagram é ecossistema. Dois níveis de marca = tráfego cruzado sem conflito de identidade.</p>
         </div>
       </div>
     </section>
