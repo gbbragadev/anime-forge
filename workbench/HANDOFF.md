@@ -1,25 +1,23 @@
 # HANDOFF
 
 ## Loop ativo
-**L1 Build — anima-deck** · B3 UI polish **DONE** · próximo = B5 ship check + P3 deploy CF Pages
+**L1 Build — anima-deck** · B5 ship check **PASS** · próximo = **P3** deploy CF Pages `deck.gbbragadev.com`
 
 ## Last agent
-glm-front | 2026-07-11 | L1/B3 anima-deck
+grok-solo | 2026-07-11 | L1/B5 anima-deck
 
-## Last iteration — L1/B3 anima-deck (2026-07-11)
-- Photocard: entrance `af-reveal`, frame interno duplo, ● REC piscando (VHS), aura de speed-lines rotativa atrás do avatar (estética manga).
-- Reveal WOW escalado por raridade: flash radial (intensidade por `--reveal-glow`) + pop dramático c/ rotação p/ épica/lendária.
-- Intro: `af-reveal` na silhueta, glow no badge EP, 3 sparkles flutuantes; chips c/ pop+hover; botões c/ active/ghost-hover; reduce-motion global catch-all.
-- ZERO deps novas, CSS-first; share/download/refazer intactos; i18n PT+EN preservado; sem IP de franquia.
-- VERIFY: `npm run build -w @anime-forge/anima-deck` **PASS** (exit 0).
-- **Next:** L1/B5 ship check static + **P3** CF Pages `deck.gbbragadev.com`.
+## Last iteration — L1/B5 anima-deck (2026-07-11)
+- Ship check static: `npm run build -w @anime-forge/anima-deck` **PASS** (exit 0, `output: "export"`, `out/index.html`).
+- Free path sem API/key; disclaimer legal na UI; i18n PT+EN; forge smoke (raridade 55/25/12/6/2, 12 personas originais).
+- `.env.example` documenta anima-deck (porta **3002**, static, PAGES_BASE_PATH, ship CF).
+- **Next:** P3 Deploy CF Pages → `deck.gbbragadev.com` (token/domínio = gate humano se faltar).
 
 ## Done (produto)
 | App | Status |
 |-----|--------|
 | **waifu-chat** | MVP + smoke OpenRouter + UI B3 GLM |
 | **anime-quiz** | P0→B5 + **live** https://gbbragadev.github.io/anime-forge/ |
-| **anima-deck** | P0 GO + P1 hooks + B1 scaffold + **B2 personas pack** (static) |
+| **anima-deck** | P0→B3 + **B5 PASS** (static) · falta P3 live URL |
 
 ## Done (harness)
 - Loops L0/L1/L2 multi-sub + Forge Autopilot (maestro)
@@ -28,14 +26,14 @@ glm-front | 2026-07-11 | L1/B3 anima-deck
 - capability `static` em `@anime-forge/config`
 
 ## Next
-1. **L1/B3** anima-deck — prompt GLM denso (photocard WOW; B1/B2 content ok, visual seco)
-2. **L1/B5** ship check static + **P3** CF Pages `deck.gbbragadev.com`
-3. Content na @otaku_sincero69 + **P4 measure** (humano)
+1. **P3** Deploy anima-deck → CF Pages `deck.gbbragadev.com`
+2. Content na @otaku_sincero69 + **P4 measure** (humano) após URL live
+3. (paralelo) Measure anime-quiz / próxima ideia via forge
 
 ## Blockers
 - P4 measure = humano
-- Deploy CF Pages = token/domínio
-- B3 visual não feito neste job (enfileirado)
+- Deploy CF Pages = token/domínio (se não configurado)
+- Sem URL live ainda → não abrir P4 deck
 
 ## Links
 - App: `apps/anima-deck/`
@@ -45,6 +43,7 @@ glm-front | 2026-07-11 | L1/B3 anima-deck
 - Master (roadmap, não v0): `ideas/anima-deck-master.md`
 - Quiz live: https://gbbragadev.github.io/anime-forge/
 - Pipeline: `docs/AGENT-PIPELINE.md`
+- Dev deck: `npm run dev:deck` → http://localhost:3002
 
 <!-- forge:begin -->
 ## Forge autopilot — anima-deck
@@ -96,8 +95,8 @@ entra com backend.
 Cards forjados (telemetria simples de evento no client se disponível sem backend;
 senão tráfego CF) + posts/prints marcando a página.
 - **Team:** grok-glm-front · **Status:** paused_gate
-- **Job atual:** L1/B5 (6/7)
-- **Branch:** pipeline/anima-deck · checkpoints: 5
-- **⏸ GATE pendente:** `b3-visual` — UI polida. Preview: http://127.0.0.1:8787/preview/anima-deck/ (ou npm run dev). Aprova o visual? → `forge decide b3-visual go|kill`
-_Atualizado 2026-07-11T04:44:39.884Z pelo forge (maestro/engine.mjs). Estado completo: maestro/pipeline.json_
+- **Job atual:** L1/B5 (6/7) → **PASS** (grok-solo 2026-07-11)
+- **Branch:** pipeline/anima-deck · checkpoints: 6
+- **Next job:** P3 Deploy CF Pages `deck.gbbragadev.com`
+_Atualizado 2026-07-11T05:28:00Z pelo grok-solo (L1/B5). Estado completo: maestro/pipeline.json_
 <!-- forge:end -->

@@ -8,7 +8,6 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Backlog
 
-- [ ] **L1/B5** Ship check anima-deck (static export + free path)
 - [ ] **P3** Deploy anima-deck → CF Pages `deck.gbbragadev.com`
 - [ ] **L0/P4** Measure anime-quiz (5–7d) — **humano** · URL https://quiz.gbbragadev.com (+ Pages antiga) · hooks `docs/content-hooks-anime-quiz.md`
 - [ ] **L0/P0** Próxima ideia via autopilot: `.\forge` (tela de setup) ou `forge new "<ideia>" --team grok-glm-front`
@@ -21,6 +20,8 @@ Uma iteração = um job. Claim em `CLAIMS.md`.
 
 ## Done
 
+- [x] **L1/B5** anima-deck — forge/grok-solo (2026-07-11)
+- [x] **L1/B5** Ship check anima-deck — grok-solo (2026-07-11) · build PASS · static export · free path N-A key
 - [x] **L1/B3** anima-deck — forge/glm-front (2026-07-11)
 - [x] **L1/B3** anima-deck — forge/glm-front (2026-07-11)
 - [x] **L1/B3** UI polish anima-deck — glm-front (2026-07-11) · photocard aura/REC/reveal WOW escalado por raridade · build PASS
