@@ -31,3 +31,8 @@ apps/*/out/
 *.jpeg
 ideas/
 .gstack/
+
+# hub é estático escrito à mão — out/ é a FONTE, não build (versionar)
+!apps/hub/
+!apps/hub/out/
+!apps/hub/out/index.html

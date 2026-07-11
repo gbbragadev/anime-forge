@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCANA — apps de anime · by @otaku_sincero69</title>
+<meta name="description" content="Os webapps de anime da ARCANA: quizzes, cards e experiências originais. Link na bio de @otaku_sincero69.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0614;--surface:#161022;--ink:#f5f0ff;--muted:#a89bc0;
+    --primary:#ff4d9a;--primary-2:#c44dff;--cyan:#22d3ee;--lime:#34d399;
+    --border:rgba(255,255,255,.08);
+    --font:"Outfit","Segoe UI",system-ui,sans-serif;
+    --display:"Bebas Neue","Outfit",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;font-family:var(--font);color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #3b1260 0%, transparent 50%),
+      radial-gradient(900px 500px at 100% 0%, #5a1040 0%, transparent 45%),
+      var(--bg);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+    background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(255,255,255,.028) 2px 3px);
+  }
+  .shell{max-width:480px;margin:0 auto;padding:28px 18px 56px}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+  .brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);
+    font-size:1.6rem;letter-spacing:.2em;
+    background:linear-gradient(90deg,var(--cyan),var(--primary-2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand svg{width:18px;height:18px;flex:none}
+  .lang{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+  .lang button{min-width:44px;min-height:32px;border:0;background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:12px;letter-spacing:.06em;cursor:pointer}
+  .lang button.on{background:rgba(34,211,238,.18);color:var(--cyan)}
+  h1{margin:0 0 6px;font-family:var(--display);font-weight:400;font-size:clamp(2.2rem,9vw,3rem);
+    line-height:.95;letter-spacing:.02em;
+    background:linear-gradient(90deg,#fff,#ffb7d5 40%,#22d3ee);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{margin:0 0 26px;color:var(--muted);font-size:.95rem;line-height:1.55;max-width:40ch}
+  .apps{display:flex;flex-direction:column;gap:14px}
+  a.app{color:inherit;text-decoration:none}
+  .app{
+    display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;
+    border:1px solid var(--border);background:rgba(22,16,34,.85);backdrop-filter:blur(8px);
+    transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
+  }
+  a.app:hover,a.app:focus-visible{transform:translateY(-2px);border-color:var(--cyan);
+    box-shadow:0 8px 26px rgba(34,211,238,.18);outline:none}
+  .app-icon{flex:none;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-size:26px;color:#120a1f;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2))}
+  .app-body{flex:1;min-width:0}
+  .app-name{margin:0;font-weight:700;font-size:1.05rem}
+  .app-desc{margin:2px 0 0;color:var(--muted);font-size:.85rem;line-height:1.4}
+  .app-cta{flex:none;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--cyan)}
+  .soon{opacity:.55}
+  .soon .app-icon{background:var(--surface);color:var(--muted);border:1px dashed var(--border)}
+  .soon .app-cta{color:var(--muted)}
+  .foot{margin-top:34px;text-align:center}
+  .seal{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.06em;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:5px 14px}
+  .seal a{color:var(--cyan);text-decoration:none}
+  .legal{margin-top:14px;color:var(--muted);font-size:11px;line-height:1.5}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <span class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#c44dff"/></linearGradient></defs>
+        <path d="M12 1 L23 12 L12 23 L1 12 Z" fill="url(#g)"/></svg>
+      ARCANA
+    </span>
+    <div class="lang" role="group" aria-label="Idioma / Language">
+      <button type="button" data-l="pt" class="on">PT</button>
+      <button type="button" data-l="en">EN</button>
+    </div>
+  </div>
+
+  <h1 data-pt="Apps de anime" data-en="Anime apps">Apps de anime</h1>
+  <p class="sub" data-pt="Quizzes, cards e experiências originais — feitos pra printar e compartilhar. Novos apps entram aqui primeiro."
+     data-en="Quizzes, cards and original experiences — made to screenshot and share. New apps land here first.">Quizzes, cards e experiências originais — feitos pra printar e compartilhar. Novos apps entram aqui primeiro.</p>
+
+  <nav class="apps" aria-label="Apps">
+    <a class="app" href="https://quiz.gbbragadev.com">
+      <span class="app-icon" aria-hidden="true">A</span>
+      <span class="app-body">
+        <p class="app-name">AnimeQuiz</p>
+        <p class="app-desc" data-pt="Qual arquétipo anime é o seu? 8 cenas, card compartilhável no final."
+           data-en="Which anime archetype are you? 8 scenes, shareable card at the end.">Qual arquétipo anime é o seu? 8 cenas, card compartilhável no final.</p>
+      </span>
+      <span class="app-cta" data-pt="JOGAR ▸" data-en="PLAY ▸">JOGAR ▸</span>
+    </a>
+
+    <a class="app" href="https://anima-deck.gbbragadev.com">
+      <span class="app-icon" aria-hidden="true">◆</span>
+      <span class="app-body">
+        <p class="app-name">ANIMA//DECK</p>
+        <p class="app-desc" data-pt="Crie um personagem original em 6 passos e forje uma photocard colecionável com raridade."
+           data-en="Create an original character in 6 steps and forge a collectible photocard with rarity.">Crie um personagem original em 6 passos e forje uma photocard colecionável com raridade.</p>
+      </span>
+      <span class="app-cta" data-pt="FORJAR ▸" data-en="FORGE ▸">FORJAR ▸</span>
+    </a>
+
+    <div class="app soon" aria-hidden="true">
+      <span class="app-icon">✦</span>
+      <span class="app-body">
+        <p class="app-name" data-pt="Próximo app" data-en="Next app">Próximo app</p>
+        <p class="app-desc" data-pt="Em produção na forja. Segue a página pra saber primeiro."
+           data-en="Being forged. Follow the page to hear it first.">Em produção na forja. Segue a página pra saber primeiro.</p>
+      </span>
+      <span class="app-cta" data-pt="EM BREVE" data-en="SOON">EM BREVE</span>
+    </div>
+  </nav>
+
+  <div class="foot">
+    <span class="seal">by <a href="https://www.instagram.com/otaku_sincero69/" rel="noopener">@otaku_sincero69</a></span>
+    <p class="legal" data-pt="Arquétipos e personagens originais. Não afiliado a estúdios ou publishers."
+       data-en="Original archetypes and characters. Not affiliated with any studio or publisher.">Arquétipos e personagens originais. Não afiliado a estúdios ou publishers.</p>
+  </div>
+</div>
+<script>
+  var KEY="anime-forge-lang";
+  function apply(l){
+    document.querySelectorAll("[data-pt]").forEach(function(el){
+      el.textContent=el.getAttribute(l==="en"?"data-en":"data-pt");
+    });
+    document.querySelectorAll(".lang button").forEach(function(b){
+      b.classList.toggle("on",b.getAttribute("data-l")===l);
+    });
+    document.documentElement.lang=l==="en"?"en":"pt-BR";
+    try{localStorage.setItem(KEY,l)}catch(e){}
+  }
+  document.querySelectorAll(".lang button").forEach(function(b){
+    b.addEventListener("click",function(){apply(b.getAttribute("data-l"))});
+  });
+  try{if(localStorage.getItem(KEY)==="en")apply("en")}catch(e){}
+</script>
+</body>
+</html>
