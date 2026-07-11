@@ -205,7 +205,13 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
   }
 
   log(`✓ deployed to Pages`);
-  const defaultUrl = `https://${appId}.pages.dev`;
+  // subdomínio REAL do projeto (nome global pode colidir → CF dá sufixo, ex. anime-quiz-9r7.pages.dev)
+  let pagesHost = `${appId}.pages.dev`;
+  if (accountId) {
+    const projRes = await cf(`/accounts/${accountId}/pages/projects/${appId}`);
+    if (projRes?.ok && projRes.result?.subdomain) pagesHost = projRes.result.subdomain;
+  }
+  const defaultUrl = `https://${pagesHost}`;
 
   // 3. Custom domain SEMPRE — o objetivo é <subdomain>.gbbragadev.com
   const customDomain = `${deploy.subdomain}.gbbragadev.com`;
@@ -251,17 +257,20 @@ async function deployToCloudflarePages(pipeline, { root, log }) {
       };
     }
 
-    const recordRes = await cf(`/zones/${zoneId}/dns_records`, {
-      method: "POST",
-      body: {
-        type: "CNAME",
-        name: deploy.subdomain,
-        content: `${appId}.pages.dev`,
-        // DNS-only: proxied trava a validação HTTP do Pages (Error 1014 até ativar);
-        // o Pages já está na edge da CF, proxy aqui é redundante.
-        proxied: false,
-      },
-    });
+    // CNAME → subdomínio REAL do projeto. Se o registro já existe, corrige o conteúdo (PATCH).
+    const existingRes = await cf(`/zones/${zoneId}/dns_records?name=${customDomain}`);
+    const existing = existingRes?.ok ? existingRes.result?.[0] : null;
+    const recordBody = {
+      type: "CNAME",
+      name: deploy.subdomain,
+      content: pagesHost,
+      // DNS-only: proxied trava a validação HTTP do Pages (Error 1014 até ativar);
+      // o Pages já está na edge da CF, proxy aqui é redundante.
+      proxied: false,
+    };
+    const recordRes = existing
+      ? await cf(`/zones/${zoneId}/dns_records/${existing.id}`, { method: "PATCH", body: recordBody })
+      : await cf(`/zones/${zoneId}/dns_records`, { method: "POST", body: recordBody });
 
     if (recordRes.ok) {
       log(`✓ DNS CNAME criado`);
